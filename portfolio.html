@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio - งานแนะแนว ยางวิทยาคาร</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="config.js"></script>
+  <style>
+    .portfolio-card { background:white; border-radius:var(--radius); border:1px solid var(--gray-200); box-shadow:var(--shadow-sm); padding:1.25rem; transition:all .2s; }
+    .portfolio-card:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
+    .portfolio-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.25rem; }
+    .file-icon { width:48px; height:48px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0; }
+    .progress-bar-wrap { margin-top:.75rem; }
+    .progress-bar-track { height:8px; background:var(--gray-200); border-radius:4px; overflow:hidden; }
+    .progress-bar-fill { height:100%; background:var(--primary); border-radius:4px; transition:width .3s; }
+    .upload-status { font-size:.82rem; color:var(--gray-600); margin-top:.35rem; }
+    .storage-info { display:flex; align-items:center; gap:.75rem; background:var(--primary-light); border-radius:var(--radius-sm); padding:.875rem 1.25rem; margin-bottom:1.25rem; }
+    .storage-info .si-icon { font-size:1.5rem; }
+    .storage-info .si-text { font-size:.85rem; color:var(--primary); font-weight:600; }
+    .storage-info .si-sub { font-size:.78rem; color:var(--gray-600); font-weight:400; }
+    .step-num { width:28px; height:28px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; flex-shrink:0; }
+    .progress-step { display:flex; align-items:flex-start; gap:1rem; padding:.875rem 0; border-bottom:1px solid var(--gray-100); }
+    .progress-step:last-child { border-bottom:none; }
+    .step-text strong { display:block; font-size:.9rem; margin-bottom:.2rem; }
+    .step-text span { font-size:.82rem; color:var(--gray-600); }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-brand">
+      <div class="navbar-logo">🎓</div>
+      <div class="navbar-title">งานแนะแนว<small>โรงเรียนยางวิทยาคาร</small></div>
+    </a>
+    <button class="hamburger" onclick="toggleMenu()">☰</button>
+    <ul class="navbar-nav" id="navMenu">
+      <li><a href="index.html">🏠 หน้าหลัก</a></li>
+      <li><a href="scholarships.html">🏆 ทุนการศึกษา</a></li>
+      <li><a href="students.html">📋 ทะเบียนนักเรียน</a></li>
+      <li><a href="portfolio.html" class="active">📁 Portfolio</a></li>
+      <li><a href="tracking.html">📊 ติดตามการสมัคร</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header">
+    <h1>📁 แฟ้มสะสมผลงาน (Portfolio)</h1>
+    <p>อัพโหลดไฟล์ขึ้น Cloudinary · จัดเก็บข้อมูลใน Firebase Firestore</p>
+  </div>
+
+  <div class="grid-2" style="align-items:start">
+    <!-- LEFT: Upload form -->
+    <div>
+      <div class="card" style="margin-bottom:1.5rem">
+        <div class="card-header"><h2>📤 อัพโหลด Portfolio</h2></div>
+        <div class="card-body">
+
+          <!-- Storage info -->
+          <div class="storage-info">
+            <div class="si-icon">☁️</div>
+            <div>
+              <div class="si-text">Cloudinary · 25 GB</div>
+              <div class="si-sub">รองรับ PDF, Word, PNG, JPG, PPTX · ขนาดไม่เกิน 25 MB/ไฟล์</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">รหัสนักเรียน <span class="required">*</span></label>
+              <input type="text" class="form-control" id="fStudentId" placeholder="เช่น 67001">
+            </div>
+            <div class="form-group">
+              <label class="form-label">ชื่อ-นามสกุล <span class="required">*</span></label>
+              <input type="text" class="form-control" id="fStudentName" placeholder="ชื่อเต็ม">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">ประเภทไฟล์</label>
+              <select class="form-control" id="fFileType">
+                <option>แฟ้มสะสมผลงาน (Portfolio)</option>
+                <option>เกียรติบัตร/รางวัล</option>
+                <option>ผลการเรียน (Transcript)</option>
+                <option>ใบรับรองกิจกรรม</option>
+                <option>ผลงานศิลปะ/ดนตรี/กีฬา</option>
+                <option>บทคัดย่องานวิจัย</option>
+                <option>เอกสารอื่นๆ</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ชื่อไฟล์/เอกสาร</label>
+              <input type="text" class="form-control" id="fFileName" placeholder="ชื่อเอกสาร">
+            </div>
+          </div>
+
+          <!-- DROP ZONE -->
+          <div class="form-group">
+            <label class="form-label">เลือกไฟล์ <span class="required">*</span></label>
+            <div class="upload-area" id="uploadArea"
+              ondragover="handleDragOver(event)"
+              ondragleave="document.getElementById('uploadArea').classList.remove('drag-over')"
+              ondrop="handleDrop(event)"
+              onclick="document.getElementById('fileInput').click()">
+              <div class="upload-icon" id="uploadIcon">☁️</div>
+              <p id="uploadText">คลิกหรือลากไฟล์มาวางที่นี่</p>
+              <small>PDF, Word, JPG, PNG, PPTX (สูงสุด 25 MB)</small>
+              <div id="selectedFileInfo" style="display:none;margin-top:.75rem">
+                <span class="badge badge-success" id="selectedFileName"></span>
+              </div>
+            </div>
+            <input type="file" id="fileInput" style="display:none"
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.pptx,.xlsx"
+              onchange="handleFileSelect(event)">
+            <!-- Upload progress -->
+            <div id="progressWrap" class="progress-bar-wrap" style="display:none">
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+              </div>
+              <div class="upload-status" id="progressText">กำลังอัพโหลด...</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">คำอธิบาย</label>
+            <textarea class="form-control" id="fDesc" rows="2" placeholder="อธิบายเนื้อหา..."></textarea>
+          </div>
+
+          <button class="btn btn-primary btn-lg" style="width:100%" id="btnSave" onclick="savePortfolio()">
+            ☁️ อัพโหลดและบันทึก
+          </button>
+          <div id="saveMsg" style="display:none;margin-top:.75rem"></div>
+        </div>
+      </div>
+
+      <!-- GUIDE -->
+      <div class="card">
+        <div class="card-header"><h2>📖 วิธีจัดทำ Portfolio</h2></div>
+        <div class="card-body">
+          <div class="progress-step"><div class="step-num">1</div><div class="step-text"><strong>รวบรวมผลงาน</strong><span>เกียรติบัตร รางวัล กิจกรรม ผลการแข่งขัน</span></div></div>
+          <div class="progress-step"><div class="step-num">2</div><div class="step-text"><strong>จัดรูปแบบ Portfolio</strong><span>เรียงตามความสำคัญ ใส่รูปประกอบ จัดหน้าให้สวยงาม</span></div></div>
+          <div class="progress-step"><div class="step-num">3</div><div class="step-text"><strong>บันทึกเป็น PDF</strong><span>คุณภาพสูง ขนาดไม่เกิน 25 MB</span></div></div>
+          <div class="progress-step"><div class="step-num">4</div><div class="step-text"><strong>อัพโหลดในระบบนี้</strong><span>ไฟล์จะถูกเก็บใน Cloudinary 25 GB อย่างปลอดภัย</span></div></div>
+          <div class="progress-step"><div class="step-num">5</div><div class="step-text"><strong>ครูตรวจสอบและแนะนำ</strong><span>ครูแนะแนวจะให้คำแนะนำก่อนส่งสมัครจริง</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Portfolio list -->
+    <div>
+      <div class="card" style="margin-bottom:1.5rem">
+        <div class="card-body" style="padding:1rem 1.5rem">
+          <div class="search-bar">
+            <div class="search-input-wrap" style="flex:1">
+              <span class="search-icon">🔍</span>
+              <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาชื่อหรือรหัส...">
+            </div>
+            <select class="form-control" id="filterType" style="width:auto">
+              <option value="">ทุกประเภท</option>
+              <option>แฟ้มสะสมผลงาน (Portfolio)</option>
+              <option>เกียรติบัตร/รางวัล</option>
+              <option>ผลการเรียน (Transcript)</option>
+              <option>ใบรับรองกิจกรรม</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="portfolioGrid" class="portfolio-grid">
+        <div class="loading" style="grid-column:1/-1"><div class="spinner"></div><p>กำลังโหลด...</p></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer"><p>งานแนะแนว โรงเรียนยางวิทยาคาร &nbsp;|&nbsp; อ.ศรีขรภูมิ จ.สุรินทร์</p></footer>
+
+<script>
+  let allPortfolios = [];
+  let selectedFile  = null;
+
+  function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
+
+  const fileIcons = {
+    'แฟ้มสะสมผลงาน (Portfolio)': { icon:'📂', bg:'#dbeafe' },
+    'เกียรติบัตร/รางวัล':         { icon:'🏅', bg:'#fef3c7' },
+    'ผลการเรียน (Transcript)':    { icon:'📊', bg:'#d1fae5' },
+    'ใบรับรองกิจกรรม':            { icon:'📜', bg:'#ede9fe' },
+    'ผลงานศิลปะ/ดนตรี/กีฬา':    { icon:'🎨', bg:'#fee2e2' },
+    'บทคัดย่องานวิจัย':           { icon:'🔬', bg:'#d1fae5' },
+    'เอกสารอื่นๆ':                { icon:'📄', bg:'#f3f4f6' },
+  };
+
+  // ---- Drag & Drop / File Select ----
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('uploadArea').classList.add('drag-over');
+  }
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('uploadArea').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) setSelectedFile(file);
+  }
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) setSelectedFile(file);
+  }
+  function setSelectedFile(file) {
+    const maxSize = 25 * 1024 * 1024;
+    if (file.size > maxSize) { alert('ไฟล์ใหญ่เกิน 25 MB กรุณาเลือกไฟล์ขนาดเล็กลง'); return; }
+    selectedFile = file;
+    document.getElementById('selectedFileInfo').style.display = 'block';
+    document.getElementById('selectedFileName').textContent = `📎 ${file.name} (${formatFileSize(file.size)})`;
+    document.getElementById('uploadText').textContent = 'ไฟล์ที่เลือก:';
+    if (!document.getElementById('fFileName').value)
+      document.getElementById('fFileName').value = file.name.replace(/\.[^/.]+$/, '');
+  }
+
+  // ---- Load portfolios ----
+  async function loadPortfolios() {
+    try {
+      let data = await getData(COL.PORTFOLIO);
+      if (!data.length) data = getDemoPortfolios();
+      allPortfolios = data;
+      renderPortfolios(allPortfolios);
+    } catch(e) {
+      document.getElementById('portfolioGrid').innerHTML = `<div class="alert alert-danger">⚠️ ${e.message}</div>`;
+    }
+  }
+
+  function getDemoPortfolios() {
+    return [
+      { id:'d1', studentCode:'67001', studentName:'นายสมชาย มีทรัพย์', fileType:'แฟ้มสะสมผลงาน (Portfolio)', fileName:'Portfolio สมชาย 2567', fileUrl:'#', fileSize:'2.3 MB', description:'Portfolio สมัคร TCAS68 รอบ 1', uploadedAt:'02/06/2567' },
+      { id:'d2', studentCode:'67001', studentName:'นายสมชาย มีทรัพย์', fileType:'เกียรติบัตร/รางวัล', fileName:'เหรียญทองโอลิมปิก', fileUrl:'#', fileSize:'480 KB', description:'โอลิมปิกวิชาการคณิต ระดับจังหวัด', uploadedAt:'28/05/2567' },
+      { id:'d3', studentCode:'67002', studentName:'นางสาวสมหญิง ดีใจ', fileType:'ผลการเรียน (Transcript)', fileName:'Transcript สมหญิง', fileUrl:'#', fileSize:'1.1 MB', description:'ผลการเรียน ม.4-5', uploadedAt:'25/05/2567' },
+    ];
+  }
+
+  function renderPortfolios(data) {
+    const grid = document.getElementById('portfolioGrid');
+    if (!data.length) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📁</div><p>ยังไม่มีข้อมูล Portfolio</p></div>`;
+      return;
+    }
+    grid.innerHTML = data.map(p => {
+      const fi = fileIcons[p.fileType] || { icon:'📄', bg:'#f3f4f6' };
+      return `
+      <div class="portfolio-card">
+        <div style="display:flex;align-items:flex-start;gap:.75rem;margin-bottom:.75rem">
+          <div class="file-icon" style="background:${fi.bg}">${fi.icon}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.fileName||'–'}</div>
+            <div style="font-size:.78rem;color:var(--gray-500)">${p.studentName||''} · ${p.studentCode||''}</div>
+          </div>
+        </div>
+        <span class="badge badge-info" style="margin-bottom:.5rem">${p.fileType||'–'}</span>
+        ${p.description ? `<p style="font-size:.82rem;color:var(--gray-600);margin:.5rem 0">${p.description}</p>` : ''}
+        <div style="font-size:.78rem;color:var(--gray-400);margin-bottom:.75rem">
+          📅 ${p.uploadedAt||'–'} ${p.fileSize ? `· 📦 ${p.fileSize}` : ''}
+        </div>
+        <div style="display:flex;gap:.5rem">
+          ${p.fileUrl && p.fileUrl !== '#'
+            ? `<a href="${p.fileUrl}" target="_blank" class="btn btn-primary btn-sm">🔗 เปิดไฟล์</a>`
+            : `<span class="btn btn-secondary btn-sm" style="opacity:.5">ไฟล์ Demo</span>`}
+          <button class="btn btn-danger btn-sm" onclick="deletePortfolio('${p.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ---- Save portfolio ----
+  async function savePortfolio() {
+    const studentCode = document.getElementById('fStudentId').value.trim();
+    const studentName = document.getElementById('fStudentName').value.trim();
+    const fileName    = document.getElementById('fFileName').value.trim();
+
+    if (!studentCode || !studentName) { showMsg('danger', '⚠️ กรุณากรอกรหัสนักเรียนและชื่อ-นามสกุล'); return; }
+    if (!selectedFile) { showMsg('danger', '⚠️ กรุณาเลือกไฟล์ก่อนอัพโหลด'); return; }
+
+    const btn = document.getElementById('btnSave');
+    btn.disabled = true;
+    btn.textContent = '⏳ กำลังอัพโหลด...';
+
+    // Show progress
+    document.getElementById('progressWrap').style.display = 'block';
+    setProgress(0, 'กำลังเตรียมไฟล์...');
+
+    try {
+      let fileUrl = '', publicId = '', fileSize = formatFileSize(selectedFile.size);
+
+      if (isConfigured() && CLOUDINARY_CLOUD_NAME !== 'YOUR_CLOUD_NAME') {
+        // Upload to Cloudinary
+        const folder = `portfolio/${studentCode}`;
+        const result = await uploadToCloudinary(selectedFile, folder, pct => {
+          setProgress(pct, `กำลังอัพโหลด ${pct}%...`);
+        });
+        fileUrl  = result.url;
+        publicId = result.publicId;
+        fileSize = result.size;
+        setProgress(100, '✅ อัพโหลดสำเร็จ กำลังบันทึก...');
+      } else {
+        // Demo mode: no real upload
+        setProgress(100, '⚠️ Demo mode — ตั้งค่า Cloudinary ใน config.js เพื่ออัพโหลดจริง');
+        fileUrl = '#';
+        await new Promise(r => setTimeout(r, 800));
+      }
+
+      // Save to Firestore
+      const data = {
+        studentCode,
+        studentName,
+        fileType:   document.getElementById('fFileType').value,
+        fileName:   fileName || selectedFile.name,
+        fileUrl,
+        publicId,
+        fileSize,
+        description: document.getElementById('fDesc').value,
+        uploadedAt:  new Date().toLocaleDateString('th-TH'),
+      };
+      await addData(COL.PORTFOLIO, data);
+
+      showMsg('success', '✅ บันทึก Portfolio เรียบร้อยแล้ว!');
+      resetForm();
+      loadPortfolios();
+    } catch(e) {
+      showMsg('danger', '❌ เกิดข้อผิดพลาด: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '☁️ อัพโหลดและบันทึก';
+    }
+  }
+
+  function setProgress(pct, text) {
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressText').textContent = text;
+  }
+
+  function showMsg(type, text) {
+    const el = document.getElementById('saveMsg');
+    el.style.display = 'block';
+    el.innerHTML = `<div class="alert alert-${type}">${text}</div>`;
+    setTimeout(() => el.style.display = 'none', 5000);
+  }
+
+  function resetForm() {
+    ['fStudentId','fStudentName','fFileName','fDesc'].forEach(id => document.getElementById(id).value = '');
+    selectedFile = null;
+    document.getElementById('selectedFileInfo').style.display = 'none';
+    document.getElementById('uploadText').textContent = 'คลิกหรือลากไฟล์มาวางที่นี่';
+    document.getElementById('progressWrap').style.display = 'none';
+    document.getElementById('fileInput').value = '';
+  }
+
+  async function deletePortfolio(id) {
+    if (!confirm('ยืนยันลบรายการนี้?')) return;
+    await deleteData(COL.PORTFOLIO, id);
+    loadPortfolios();
+  }
+
+  function applyFilters() {
+    const q    = document.getElementById('searchInput').value.toLowerCase();
+    const type = document.getElementById('filterType').value;
+    let result = allPortfolios;
+    if (type) result = result.filter(p => p.fileType === type);
+    if (q)    result = result.filter(p => Object.values(p).some(v => String(v).toLowerCase().includes(q)));
+    renderPortfolios(result);
+  }
+
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('filterType').addEventListener('change', applyFilters);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('student')) document.getElementById('fStudentId').value = urlParams.get('student');
+
+  loadPortfolios();
+</script>
+</body>
+</html>
