@@ -34,19 +34,19 @@ function createExportButton(containerId, options = {}) {
     e.stopPropagation();
     document.querySelectorAll('.__export-menu').forEach(m => { m.style.display = 'none'; });
     if (menu.style.display === 'block') { menu.style.display = 'none'; return; }
-    // คำนวณตำแหน่งจาก button
+    // ใช้ fixed positioning — ไม่ถูกบังโดย overflow:hidden ของ parent
     const rect = btn.getBoundingClientRect();
-    menu.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
-    menu.style.left = (rect.right + window.scrollX - 170) + 'px';
+    menu.style.top  = (rect.bottom + 4) + 'px';
+    menu.style.left = (rect.right - 175) + 'px';
     menu.style.display = 'block';
   };
 
   const menu = document.createElement('div');
   menu.className = '__export-menu';
   menu.style.cssText = `
-    display:none; position:absolute; top:0; left:0;
+    display:none; position:fixed; top:0; left:0;
     background:white; border:1.5px solid #e5e7eb; border-radius:10px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.15); min-width:170px; z-index:99999;
+    box-shadow:0 8px 32px rgba(0,0,0,0.2); min-width:175px; z-index:99999;
     overflow:hidden;
   `;
   document.body.appendChild(menu);
