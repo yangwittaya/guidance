@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ทะเบียนนักเรียน - งานแนะแนว ยางวิทยาคาร</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="auth.js"></script>
+  <script src="config.js"></script>
+  <style>
+    .student-avatar { width:38px; height:38px; border-radius:50%; background:var(--primary-light); color:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; flex-shrink:0; }
+    .student-name { font-weight:600; font-size:.9rem; }
+    .student-id { font-size:.78rem; color:var(--gray-400); }
+    .gpa-bar { display:flex; align-items:center; gap:.5rem; }
+    .gpa-track { height:6px; background:var(--gray-200); border-radius:3px; flex:1; overflow:hidden; }
+    .gpa-fill { height:100%; border-radius:3px; }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-brand">
+      <div class="navbar-logo">🎓</div>
+      <div class="navbar-title">งานแนะแนว<small>โรงเรียนยางวิทยาคาร</small></div>
+    </a>
+    <button class="hamburger" onclick="toggleMenu()">☰</button>
+    <ul class="navbar-nav" id="navMenu">
+      <li><a href="index.html">🏠 หน้าหลัก</a></li>
+      <li><a href="scholarships.html">🏆 ทุนการศึกษา</a></li>
+      <li><a href="students.html" class="active">📋 ทะเบียนนักเรียน</a></li>
+      <li><a href="portfolio.html">📁 Portfolio</a></li>
+      <li><a href="tracking.html">📊 ติดตามการสมัคร</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header">
+    <h1>📋 ทะเบียนนักเรียน</h1>
+    <p>บันทึกและค้นหาประวัตินักเรียน แผนการเรียน ข้อมูลติดต่อ</p>
+  </div>
+
+  <div class="card" style="margin-bottom:1.5rem">
+    <div class="card-body" style="padding:1rem 1.5rem">
+      <div class="search-bar">
+        <div class="search-input-wrap" style="flex:1">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาชื่อ รหัส หรือห้องเรียน...">
+        </div>
+        <select class="form-control" id="filterClass" style="width:auto">
+          <option value="">ทุกชั้น</option>
+          <option>ม.1</option><option>ม.2</option><option>ม.3</option>
+          <option>ม.4</option><option>ม.5</option><option>ม.6</option>
+        </select>
+        <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่มนักเรียน</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>👨‍🎓 รายชื่อนักเรียน</h2>
+      <span id="totalCount" class="badge badge-info">0 คน</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>นักเรียน</th><th>ชั้น/ห้อง</th><th>แผนการเรียน</th>
+            <th>GPA</th><th>เบอร์โทร</th><th>ผู้ปกครอง</th><th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="studentBody">
+          <tr><td colspan="7" class="loading"><div class="spinner"></div><br>กำลังโหลด...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="studentModal">
+  <div class="modal" style="max-width:750px">
+    <div class="modal-header">
+      <h3 id="modalTitle">📋 เพิ่มนักเรียน</h3>
+      <button class="modal-close" onclick="closeModal('studentModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">รหัสนักเรียน <span class="required">*</span></label>
+          <input type="text" class="form-control" id="fCode" placeholder="เช่น 67001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ชื่อ-นามสกุล <span class="required">*</span></label>
+          <input type="text" class="form-control" id="fFullname" placeholder="ชื่อเต็ม">
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">ชั้น</label>
+          <select class="form-control" id="fLevel">
+            <option>ม.1</option><option>ม.2</option><option>ม.3</option>
+            <option>ม.4</option><option>ม.5</option><option>ม.6</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ห้อง</label>
+          <input type="text" class="form-control" id="fRoom" placeholder="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">เพศ</label>
+          <select class="form-control" id="fGender"><option>ชาย</option><option>หญิง</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">วันเกิด</label>
+          <input type="date" class="form-control" id="fBirth">
+        </div>
+        <div class="form-group">
+          <label class="form-label">GPA</label>
+          <input type="number" class="form-control" id="fGpa" step="0.01" min="0" max="4" placeholder="0.00–4.00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ที่อยู่</label>
+        <textarea class="form-control" id="fAddress" rows="2" placeholder="บ้านเลขที่ หมู่ ตำบล อำเภอ จังหวัด"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">เบอร์โทรนักเรียน</label>
+          <input type="tel" class="form-control" id="fPhone" placeholder="0812345678">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ผู้ปกครอง</label>
+          <input type="text" class="form-control" id="fParent" placeholder="ชื่อผู้ปกครอง">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">เบอร์ผู้ปกครอง</label>
+          <input type="tel" class="form-control" id="fParentPhone" placeholder="0812345678">
+        </div>
+        <div class="form-group">
+          <label class="form-label">แผนการเรียน</label>
+          <select class="form-control" id="fPlan">
+            <option>วิทย์-คณิต</option><option>ศิลป์-คำนวณ</option>
+            <option>ศิลป์-ภาษา</option><option>ศิลป์-ทั่วไป</option><option>อื่นๆ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ความสนใจ / อาชีพที่ต้องการ</label>
+        <textarea class="form-control" id="fInterest" rows="2" placeholder="เช่น สนใจด้านวิศวกรรม..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('studentModal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveStudent()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="viewModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="viewName">ประวัตินักเรียน</h3>
+      <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+    </div>
+    <div class="modal-body" id="viewBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('viewModal')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><p>งานแนะแนว โรงเรียนยางวิทยาคาร &nbsp;|&nbsp; อ.ศรีขรภูมิ จ.สุรินทร์</p></footer>
+
+<script>
+  let allStudents = [];
+  function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
+  function openModal(id)  { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  function openAddModal() {
+    document.getElementById('editId').value = '';
+    document.getElementById('modalTitle').textContent = '📋 เพิ่มนักเรียน';
+    ['fCode','fFullname','fRoom','fBirth','fGpa','fAddress','fPhone','fParent','fParentPhone','fInterest'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fLevel').value  = 'ม.4';
+    document.getElementById('fGender').value = 'ชาย';
+    document.getElementById('fPlan').value   = 'วิทย์-คณิต';
+    openModal('studentModal');
+  }
+
+  async function loadStudents() {
+    try {
+      let data = await getData(COL.STUDENTS);
+      if (!data.length) data = getDemoStudents();
+      allStudents = data;
+      renderStudents(allStudents);
+    } catch(e) {
+      document.getElementById('studentBody').innerHTML = `<tr><td colspan="7"><div class="alert alert-danger">⚠️ ${e.message}</div></td></tr>`;
+    }
+  }
+
+  function getDemoStudents() {
+    return [
+      { id:'d1', studentCode:'67001', fullname:'นายสมชาย มีทรัพย์', level:'ม.6', room:'1', gender:'ชาย', gpa:'3.75', plan:'วิทย์-คณิต', phone:'0812345678', parent:'นายสมศักดิ์', parentPhone:'0823456789', interest:'วิศวกรรมศาสตร์' },
+      { id:'d2', studentCode:'67002', fullname:'นางสาวสมหญิง ดีใจ',  level:'ม.6', room:'2', gender:'หญิง', gpa:'3.92', plan:'วิทย์-คณิต', phone:'0834567890', parent:'นางสมร', parentPhone:'0845678901', interest:'แพทยศาสตร์' },
+      { id:'d3', studentCode:'67003', fullname:'นายวิชัย แสนดี',     level:'ม.5', room:'1', gender:'ชาย', gpa:'2.85', plan:'ศิลป์-คำนวณ', phone:'0856789012', parent:'นายวิรัตน์', parentPhone:'0867890123', interest:'บัญชี การเงิน' },
+    ];
+  }
+
+  function renderStudents(data) {
+    document.getElementById('totalCount').textContent = data.length + ' คน';
+    const body = document.getElementById('studentBody');
+    if (!data.length) {
+      body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👨‍🎓</div><p>ยังไม่มีข้อมูลนักเรียน</p></div></td></tr>`;
+      return;
+    }
+    body.innerHTML = data.map(s => {
+      const initial = (s.fullname||'?').replace(/^(นาย|นางสาว|นาง)\s*/,'').charAt(0);
+      const gpa = parseFloat(s.gpa) || 0;
+      const gpaColor = gpa>=3.5?'#10b981':gpa>=3.0?'#3b82f6':gpa>=2.0?'#f59e0b':'#ef4444';
+      return `<tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:.75rem">
+            <div class="student-avatar">${initial}</div>
+            <div><div class="student-name">${s.fullname||'–'}</div><div class="student-id">${s.studentCode||''}</div></div>
+          </div>
+        </td>
+        <td>${s.level||''} / ${s.room||''}</td>
+        <td><span class="badge badge-info">${s.plan||'–'}</span></td>
+        <td>
+          <div class="gpa-bar">
+            <span style="font-weight:700;color:${gpaColor};width:2.5rem">${gpa.toFixed(2)}</span>
+            <div class="gpa-track"><div class="gpa-fill" style="width:${(gpa/4)*100}%;background:${gpaColor}"></div></div>
+          </div>
+        </td>
+        <td>${s.phone||'–'}</td>
+        <td>${s.parent||'–'}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-secondary btn-sm" onclick="viewStudent('${s.id}')">👁️</button>
+          <button class="btn btn-secondary btn-sm" onclick="editStudent('${s.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.id}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function viewStudent(id) {
+    const s = allStudents.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('viewName').textContent = '👨‍🎓 ' + (s.fullname||'');
+    document.getElementById('viewBody').innerHTML = `
+      <div style="display:grid;gap:.75rem;font-size:.9rem">
+        <div class="form-row"><div><strong>รหัส:</strong> ${s.studentCode||'–'}</div><div><strong>ชั้น/ห้อง:</strong> ${s.level||''} / ${s.room||''}</div></div>
+        <div class="form-row"><div><strong>เพศ:</strong> ${s.gender||'–'}</div><div><strong>GPA:</strong> ${s.gpa||'–'}</div></div>
+        <div><strong>แผนการเรียน:</strong> ${s.plan||'–'}</div>
+        <div><strong>วันเกิด:</strong> ${s.birthDate||'–'}</div>
+        <div><strong>ที่อยู่:</strong> ${s.address||'–'}</div>
+        <div class="form-row"><div><strong>เบอร์โทร:</strong> ${s.phone||'–'}</div><div><strong>ผู้ปกครอง:</strong> ${s.parent||'–'}</div></div>
+        <div><strong>เบอร์ผู้ปกครอง:</strong> ${s.parentPhone||'–'}</div>
+        <div><strong>ความสนใจ:</strong> ${s.interest||'–'}</div>
+        <div style="margin-top:.5rem;display:flex;gap:.5rem">
+          <a href="portfolio.html?student=${s.studentCode}" class="btn btn-secondary btn-sm">📁 Portfolio</a>
+          <a href="tracking.html?student=${s.studentCode}" class="btn btn-secondary btn-sm">📊 ติดตาม</a>
+        </div>
+      </div>`;
+    openModal('viewModal');
+  }
+
+  function editStudent(id) {
+    const s = allStudents.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('editId').value       = id;
+    document.getElementById('modalTitle').textContent = '✏️ แก้ไขประวัตินักเรียน';
+    document.getElementById('fCode').value        = s.studentCode||'';
+    document.getElementById('fFullname').value    = s.fullname||'';
+    document.getElementById('fLevel').value       = s.level||'ม.4';
+    document.getElementById('fRoom').value        = s.room||'';
+    document.getElementById('fGender').value      = s.gender||'ชาย';
+    document.getElementById('fBirth').value       = s.birthDate||'';
+    document.getElementById('fGpa').value         = s.gpa||'';
+    document.getElementById('fAddress').value     = s.address||'';
+    document.getElementById('fPhone').value       = s.phone||'';
+    document.getElementById('fParent').value      = s.parent||'';
+    document.getElementById('fParentPhone').value = s.parentPhone||'';
+    document.getElementById('fPlan').value        = s.plan||'วิทย์-คณิต';
+    document.getElementById('fInterest').value    = s.interest||'';
+    openModal('studentModal');
+  }
+
+  async function saveStudent() {
+    const fullname = document.getElementById('fFullname').value.trim();
+    if (!fullname) { alert('กรุณากรอกชื่อ-นามสกุล'); return; }
+    const data = {
+      studentCode:  document.getElementById('fCode').value,
+      fullname,
+      level:        document.getElementById('fLevel').value,
+      room:         document.getElementById('fRoom').value,
+      gender:       document.getElementById('fGender').value,
+      birthDate:    document.getElementById('fBirth').value,
+      gpa:          document.getElementById('fGpa').value,
+      address:      document.getElementById('fAddress').value,
+      phone:        document.getElementById('fPhone').value,
+      parent:       document.getElementById('fParent').value,
+      parentPhone:  document.getElementById('fParentPhone').value,
+      plan:         document.getElementById('fPlan').value,
+      interest:     document.getElementById('fInterest').value,
+    };
+    const editId = document.getElementById('editId').value;
+    try {
+      if (editId) await updateData(COL.STUDENTS, editId, data);
+      else await addData(COL.STUDENTS, data);
+      closeModal('studentModal');
+      loadStudents();
+    } catch(e) { alert('บันทึกไม่สำเร็จ: ' + e.message); }
+  }
+
+  async function deleteStudent(id) {
+    if (!confirm('ยืนยันลบนักเรียนนี้?')) return;
+    await deleteData(COL.STUDENTS, id);
+    loadStudents();
+  }
+
+  function applyFilters() {
+    const q   = document.getElementById('searchInput').value.toLowerCase();
+    const cls = document.getElementById('filterClass').value;
+    let result = allStudents;
+    if (cls) result = result.filter(s => s.level === cls);
+    if (q)   result = result.filter(s => Object.values(s).some(v => String(v).toLowerCase().includes(q)));
+    renderStudents(result);
+  }
+
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('filterClass').addEventListener('change', applyFilters);
+
+  loadStudents();
+</script>
+</body>
+</html>

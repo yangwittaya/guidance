@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ติดตามการสมัคร - งานแนะแนว ยางวิทยาคาร</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <style>
+    .kanban-board { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:2rem; }
+    .kanban-col { background:var(--gray-50); border-radius:var(--radius); border:1px solid var(--gray-200); overflow:hidden; }
+    .kanban-col-header { padding:.875rem 1rem; font-weight:700; font-size:.875rem; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--gray-200); }
+    .kanban-col-body { padding:.75rem; display:flex; flex-direction:column; gap:.5rem; min-height:100px; }
+    .kanban-card { background:white; border-radius:var(--radius-sm); padding:.875rem; box-shadow:var(--shadow-sm); border:1px solid var(--gray-100); font-size:.85rem; cursor:pointer; transition:box-shadow .15s; }
+    .kanban-card:hover { box-shadow:var(--shadow); }
+    .kanban-card .kc-name { font-weight:700; margin-bottom:.25rem; }
+    .kanban-card .kc-inst { color:var(--gray-600); font-size:.8rem; }
+    @media(max-width:900px) { .kanban-board { grid-template-columns:1fr 1fr; } }
+    @media(max-width:600px) { .kanban-board { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-brand">
+      <div class="navbar-logo">🎓</div>
+      <div class="navbar-title">งานแนะแนว<small>โรงเรียนยางวิทยาคาร</small></div>
+    </a>
+    <button class="hamburger" onclick="toggleMenu()">☰</button>
+    <ul class="navbar-nav" id="navMenu">
+      <li><a href="index.html">🏠 หน้าหลัก</a></li>
+      <li><a href="scholarships.html">🏆 ทุนการศึกษา</a></li>
+      <li><a href="students.html">📋 ทะเบียนนักเรียน</a></li>
+      <li><a href="portfolio.html">📁 Portfolio</a></li>
+      <li><a href="tracking.html" class="active">📊 ติดตามการสมัคร</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header">
+    <h1>📊 ติดตามการสมัครเรียนต่อ</h1>
+    <p>บันทึกและติดตามสถานะการสมัครเรียนต่อของนักเรียน</p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid" style="margin-bottom:1.5rem">
+    <div class="stat-card"><div class="stat-icon blue">📝</div><div class="stat-info"><div class="stat-number" id="stTotal">–</div><div class="stat-label">รายการทั้งหมด</div></div></div>
+    <div class="stat-card"><div class="stat-icon amber">⏳</div><div class="stat-info"><div class="stat-number" id="stPending">–</div><div class="stat-label">กำลังดำเนินการ</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">✅</div><div class="stat-info"><div class="stat-number" id="stPassed">–</div><div class="stat-label">ผ่าน / ได้รับการรับ</div></div></div>
+    <div class="stat-card"><div class="stat-icon purple">❌</div><div class="stat-info"><div class="stat-number" id="stFailed">–</div><div class="stat-label">ไม่ผ่าน</div></div></div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="card" style="margin-bottom:1.5rem">
+    <div class="card-body" style="padding:1rem 1.5rem">
+      <div class="search-bar">
+        <div class="search-input-wrap" style="flex:1">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาชื่อ สถาบัน หรือสาขา...">
+        </div>
+        <select class="form-control" id="filterRound" style="width:auto">
+          <option value="">ทุกรอบ</option>
+          <option>รอบ 1 Portfolio</option><option>รอบ 2 โควตา</option>
+          <option>รอบ 3 Admission</option><option>รอบ 4 Direct Admission</option><option>สมัครตรง</option>
+        </select>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-primary"   id="btnTable"  onclick="setView('table')">📋 ตาราง</button>
+          <button class="btn btn-secondary" id="btnKanban" onclick="setView('kanban')">📌 กระดาน</button>
+        </div>
+        <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่มรายการ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE VIEW -->
+  <div id="tableView" class="card">
+    <div class="card-header">
+      <h2>📋 รายการสมัครเรียน</h2>
+      <span id="totalCount" class="badge badge-info">0 รายการ</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>นักเรียน</th><th>สถาบัน</th><th>คณะ/สาขา</th>
+            <th>รอบ</th><th>วันสมัคร</th><th>สถานะ</th><th>ผล</th><th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="trackingBody">
+          <tr><td colspan="8" class="loading"><div class="spinner"></div><br>กำลังโหลด...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- KANBAN VIEW -->
+  <div id="kanbanView" style="display:none">
+    <div class="kanban-board" id="kanbanBoard"></div>
+  </div>
+</main>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="trackModal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <h3 id="modalTitle">📊 เพิ่มการสมัครเรียน</h3>
+      <button class="modal-close" onclick="closeModal('trackModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">รหัสนักเรียน</label>
+          <input type="text" class="form-control" id="fStudentCode" placeholder="67001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ชื่อนักเรียน <span class="required">*</span></label>
+          <input type="text" class="form-control" id="fStudentName" placeholder="ชื่อเต็ม">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">สถาบัน <span class="required">*</span></label>
+          <input type="text" class="form-control" id="fInstitution" placeholder="เช่น มหาวิทยาลัยขอนแก่น">
+        </div>
+        <div class="form-group">
+          <label class="form-label">คณะ/สาขา <span class="required">*</span></label>
+          <input type="text" class="form-control" id="fFaculty" placeholder="เช่น วิศวกรรมไฟฟ้า">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ประเภทการรับ</label>
+          <select class="form-control" id="fAdmType">
+            <option>TCAS</option><option>สมัครตรง</option><option>โควตาโรงเรียน</option><option>อื่นๆ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">รอบที่สมัคร</label>
+          <select class="form-control" id="fRound">
+            <option>รอบ 1 Portfolio</option><option>รอบ 2 โควตา</option>
+            <option>รอบ 3 Admission</option><option>รอบ 4 Direct Admission</option><option>สมัครตรง</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">วันที่สมัคร</label>
+          <input type="date" class="form-control" id="fApplyDate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">สถานะ</label>
+          <select class="form-control" id="fStatus">
+            <option>กำลังดำเนินการ</option><option>รอผล</option>
+            <option>ผ่าน</option><option>ไม่ผ่าน</option><option>สละสิทธิ์</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ผลการสมัคร</label>
+          <select class="form-control" id="fResult">
+            <option value="">– ยังไม่มีผล –</option>
+            <option>ผ่านการคัดเลือก</option><option>ไม่ผ่านการคัดเลือก</option>
+            <option>สอบสัมภาษณ์</option><option>รอประกาศ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">หมายเหตุ</label>
+          <input type="text" class="form-control" id="fNote" placeholder="บันทึกเพิ่มเติม">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('trackModal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveTracking()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><p>งานแนะแนว โรงเรียนยางวิทยาคาร &nbsp;|&nbsp; อ.ศรีขรภูมิ จ.สุรินทร์</p></footer>
+
+<script>
+  let allTrackings = [];
+  let currentView  = 'table';
+
+  function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
+  function openModal(id)  { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  const statusBadge = {
+    'กำลังดำเนินการ':'badge-info','รอผล':'badge-warning',
+    'ผ่าน':'badge-success','ไม่ผ่าน':'badge-danger','สละสิทธิ์':'badge-gray'
+  };
+  const resultConfig = {
+    'ผ่านการคัดเลือก':    { badge:'badge-success', icon:'✅' },
+    'ไม่ผ่านการคัดเลือก': { badge:'badge-danger',  icon:'❌' },
+    'สอบสัมภาษณ์':        { badge:'badge-warning', icon:'🗣️' },
+    'รอประกาศ':           { badge:'badge-gray',    icon:'⏳' },
+  };
+
+  function setView(v) {
+    currentView = v;
+    document.getElementById('tableView').style.display  = v==='table'  ? '' : 'none';
+    document.getElementById('kanbanView').style.display = v==='kanban' ? '' : 'none';
+    document.getElementById('btnTable').className  = 'btn ' + (v==='table'  ? 'btn-primary' : 'btn-secondary');
+    document.getElementById('btnKanban').className = 'btn ' + (v==='kanban' ? 'btn-primary' : 'btn-secondary');
+    if (v === 'kanban') renderKanban(getFiltered());
+  }
+
+  function openAddModal() {
+    document.getElementById('editId').value = '';
+    document.getElementById('modalTitle').textContent = '📊 เพิ่มการสมัครเรียน';
+    ['fStudentCode','fStudentName','fInstitution','fFaculty','fApplyDate','fNote'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fAdmType').value = 'TCAS';
+    document.getElementById('fRound').value   = 'รอบ 1 Portfolio';
+    document.getElementById('fStatus').value  = 'กำลังดำเนินการ';
+    document.getElementById('fResult').value  = '';
+    const p = new URLSearchParams(window.location.search);
+    if (p.get('student')) document.getElementById('fStudentCode').value = p.get('student');
+    openModal('trackModal');
+  }
+
+  async function loadTrackings() {
+    try {
+      let data = await getData(COL.TRACKING);
+      if (!data.length) data = getDemoTrackings();
+      allTrackings = data;
+      renderAll(allTrackings);
+    } catch(e) {
+      document.getElementById('trackingBody').innerHTML = `<tr><td colspan="8"><div class="alert alert-danger">⚠️ ${e.message}</div></td></tr>`;
+    }
+  }
+
+  function getDemoTrackings() {
+    return [
+      { id:'d1', studentCode:'67001', studentName:'นายสมชาย มีทรัพย์', institution:'มหาวิทยาลัยขอนแก่น', faculty:'วิศวกรรมไฟฟ้า', admType:'TCAS', round:'รอบ 1 Portfolio', applyDate:'2024-10-15', status:'ผ่าน', result:'ผ่านการคัดเลือก', note:'' },
+      { id:'d2', studentCode:'67002', studentName:'นางสาวสมหญิง ดีใจ', institution:'มหาวิทยาลัยมหิดล', faculty:'แพทยศาสตร์', admType:'TCAS', round:'รอบ 1 Portfolio', applyDate:'2024-10-10', status:'รอผล', result:'รอประกาศ', note:'' },
+      { id:'d3', studentCode:'67003', studentName:'นายวิชัย แสนดี', institution:'มหาวิทยาลัยราชภัฏสุรินทร์', faculty:'บัญชีบัณฑิต', admType:'สมัครตรง', round:'สมัครตรง', applyDate:'2024-11-01', status:'กำลังดำเนินการ', result:'', note:'ส่งเอกสารแล้ว' },
+    ];
+  }
+
+  function renderAll(data) {
+    document.getElementById('stTotal').textContent   = data.length;
+    document.getElementById('stPending').textContent = data.filter(d => ['กำลังดำเนินการ','รอผล'].includes(d.status)).length;
+    document.getElementById('stPassed').textContent  = data.filter(d => d.status==='ผ่าน').length;
+    document.getElementById('stFailed').textContent  = data.filter(d => d.status==='ไม่ผ่าน').length;
+    document.getElementById('totalCount').textContent = data.length + ' รายการ';
+    renderTable(data);
+    if (currentView === 'kanban') renderKanban(data);
+  }
+
+  function renderTable(data) {
+    const body = document.getElementById('trackingBody');
+    if (!data.length) {
+      body.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📊</div><p>ยังไม่มีข้อมูล</p></div></td></tr>`;
+      return;
+    }
+    body.innerHTML = data.map(t => {
+      const sb = statusBadge[t.status] || 'badge-gray';
+      const rc = resultConfig[t.result];
+      const resultHtml = rc ? `<span class="badge ${rc.badge}">${rc.icon} ${t.result}</span>` : '<span style="color:var(--gray-400);font-size:.8rem">–</span>';
+      return `<tr>
+        <td><strong>${t.studentName||'–'}</strong><br><small style="color:var(--gray-400)">${t.studentCode||''}</small></td>
+        <td>${t.institution||'–'}</td>
+        <td>${t.faculty||'–'}</td>
+        <td><span class="badge badge-info">${t.round||'–'}</span></td>
+        <td style="font-size:.82rem;color:var(--gray-600)">${t.applyDate||'–'}</td>
+        <td><span class="badge ${sb}">${t.status||'–'}</span></td>
+        <td>${resultHtml}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-secondary btn-sm" onclick="editTracking('${t.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTracking('${t.id}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderKanban(data) {
+    const stages = ['กำลังดำเนินการ','รอผล','ผ่าน','ไม่ผ่าน'];
+    const colors = { 'กำลังดำเนินการ':'#3b82f6','รอผล':'#f59e0b','ผ่าน':'#10b981','ไม่ผ่าน':'#ef4444' };
+    document.getElementById('kanbanBoard').innerHTML = stages.map(stage => {
+      const items = data.filter(d => d.status === stage);
+      return `<div class="kanban-col">
+        <div class="kanban-col-header" style="border-top:3px solid ${colors[stage]}">
+          <span>${stage}</span><span class="badge badge-gray">${items.length}</span>
+        </div>
+        <div class="kanban-col-body">
+          ${items.length ? items.map(t => `
+            <div class="kanban-card" onclick="editTracking('${t.id}')">
+              <div class="kc-name">${t.studentName||'–'}</div>
+              <div class="kc-inst">🏛️ ${t.institution||'–'}</div>
+              <div class="kc-inst">📚 ${t.faculty||'–'}</div>
+              <div style="margin-top:.4rem"><span class="badge badge-info">${t.round||'–'}</span></div>
+              ${t.result ? `<div style="margin-top:.35rem;font-size:.78rem;color:${t.result.includes('ผ่าน')&&!t.result.includes('ไม่')?'#065f46':'#991b1b'}">${t.result}</div>` : ''}
+            </div>`).join('')
+          : `<div style="text-align:center;padding:1rem;color:var(--gray-400);font-size:.82rem">ไม่มีรายการ</div>`}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function editTracking(id) {
+    const t = allTrackings.find(x => x.id === id);
+    if (!t) return;
+    document.getElementById('editId').value          = id;
+    document.getElementById('modalTitle').textContent= '✏️ แก้ไขการสมัคร';
+    document.getElementById('fStudentCode').value   = t.studentCode||'';
+    document.getElementById('fStudentName').value   = t.studentName||'';
+    document.getElementById('fInstitution').value   = t.institution||'';
+    document.getElementById('fFaculty').value       = t.faculty||'';
+    document.getElementById('fAdmType').value       = t.admType||'TCAS';
+    document.getElementById('fRound').value         = t.round||'รอบ 1 Portfolio';
+    document.getElementById('fApplyDate').value     = t.applyDate||'';
+    document.getElementById('fStatus').value        = t.status||'กำลังดำเนินการ';
+    document.getElementById('fResult').value        = t.result||'';
+    document.getElementById('fNote').value          = t.note||'';
+    openModal('trackModal');
+  }
+
+  async function saveTracking() {
+    const studentName = document.getElementById('fStudentName').value.trim();
+    const institution = document.getElementById('fInstitution').value.trim();
+    if (!studentName || !institution) { alert('กรุณากรอกชื่อนักเรียนและสถาบัน'); return; }
+    const data = {
+      studentCode:  document.getElementById('fStudentCode').value,
+      studentName,
+      institution,
+      faculty:      document.getElementById('fFaculty').value,
+      admType:      document.getElementById('fAdmType').value,
+      round:        document.getElementById('fRound').value,
+      applyDate:    document.getElementById('fApplyDate').value,
+      status:       document.getElementById('fStatus').value,
+      result:       document.getElementById('fResult').value,
+      note:         document.getElementById('fNote').value,
+    };
+    const editId = document.getElementById('editId').value;
+    try {
+      if (editId) await updateData(COL.TRACKING, editId, data);
+      else await addData(COL.TRACKING, data);
+      closeModal('trackModal');
+      loadTrackings();
+    } catch(e) { alert('บันทึกไม่สำเร็จ: ' + e.message); }
+  }
+
+  async function deleteTracking(id) {
+    if (!confirm('ยืนยันลบรายการนี้?')) return;
+    await deleteData(COL.TRACKING, id);
+    loadTrackings();
+  }
+
+  function getFiltered() {
+    const q     = document.getElementById('searchInput').value.toLowerCase();
+    const round = document.getElementById('filterRound').value;
+    let result  = allTrackings;
+    if (round) result = result.filter(t => t.round === round);
+    if (q)     result = result.filter(t => Object.values(t).some(v => String(v).toLowerCase().includes(q)));
+    return result;
+  }
+
+  function applyFilters() { renderAll(getFiltered()); }
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('filterRound').addEventListener('change', applyFilters);
+
+  loadTrackings();
+</script>
+</body>
+</html>

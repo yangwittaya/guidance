@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>งานแนะแนว - โรงเรียนยางวิทยาคาร</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <style>
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+      color: white;
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '🎓';
+      position: absolute;
+      right: 2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 6rem;
+      opacity: 0.15;
+    }
+    .hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .hero p { font-size: 1rem; opacity: 0.9; max-width: 600px; }
+
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .quick-link-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .quick-link-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+      border-color: var(--primary);
+    }
+    .quick-link-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .quick-link-info h3 { font-size: 0.95rem; font-weight: 700; color: var(--gray-800); }
+    .quick-link-info p { font-size: 0.8rem; color: var(--gray-600); margin-top: 0.15rem; }
+
+    .news-item {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .news-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .news-date {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.6rem;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      min-width: 48px;
+      flex-shrink: 0;
+    }
+    .news-title { font-weight: 600; font-size: 0.9rem; color: var(--gray-800); margin-bottom: 0.2rem; }
+    .news-desc { font-size: 0.82rem; color: var(--gray-600); }
+
+    .calendar-widget {
+      background: white;
+      border-radius: var(--radius);
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .event-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .event-item:last-child { border-bottom: none; }
+    .event-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .event-text { font-size: 0.875rem; color: var(--gray-700); flex: 1; }
+    .event-date { font-size: 0.78rem; color: var(--gray-400); white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-brand">
+      <div class="navbar-logo">🎓</div>
+      <div class="navbar-title">
+        งานแนะแนว
+        <small>โรงเรียนยางวิทยาคาร</small>
+      </div>
+    </a>
+    <button class="hamburger" onclick="toggleMenu()">☰</button>
+    <ul class="navbar-nav" id="navMenu">
+      <li><a href="index.html" class="active">🏠 หน้าหลัก</a></li>
+      <li><a href="scholarships.html">🏆 ทุนการศึกษา</a></li>
+      <li><a href="students.html">📋 ทะเบียนนักเรียน</a></li>
+      <li><a href="portfolio.html">📁 Portfolio</a></li>
+      <li><a href="tracking.html">📊 ติดตามการสมัคร</a></li>
+      <li data-role="admin"><a href="admin.html">⚙️ จัดการผู้ใช้</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main-content">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>ระบบงานแนะแนว</h1>
+    <p>โรงเรียนยางวิทยาคาร อำเภอศรีขรภูมิ จังหวัดสุรินทร์<br>
+      ศูนย์กลางข้อมูลทุนการศึกษา การสมัครเรียนต่อ และพัฒนานักเรียน</p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+      <div class="stat-icon blue">🏆</div>
+      <div class="stat-info">
+        <div class="stat-number" id="statScholar">–</div>
+        <div class="stat-label">ทุนการศึกษาที่เปิดรับ</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon amber">👨‍🎓</div>
+      <div class="stat-info">
+        <div class="stat-number" id="statStudents">–</div>
+        <div class="stat-label">นักเรียนในระบบ</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">📊</div>
+      <div class="stat-info">
+        <div class="stat-number" id="statTracking">–</div>
+        <div class="stat-label">กำลังติดตามการสมัคร</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon purple">📁</div>
+      <div class="stat-info">
+        <div class="stat-number" id="statPortfolio">–</div>
+        <div class="stat-label">Portfolio ที่อัพโหลดแล้ว</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK LINKS -->
+  <div class="quick-links">
+    <a href="scholarships.html" class="quick-link-card">
+      <div class="quick-link-icon" style="background:#fef3c7">🏆</div>
+      <div class="quick-link-info">
+        <h3>ทุนการศึกษา</h3>
+        <p>ดูประกาศทุน ช่องทางสมัคร เงื่อนไข</p>
+      </div>
+    </a>
+    <a href="students.html" class="quick-link-card">
+      <div class="quick-link-icon" style="background:#dbeafe">📋</div>
+      <div class="quick-link-info">
+        <h3>ทะเบียนนักเรียน</h3>
+        <p>บันทึก/ค้นหาประวัตินักเรียน</p>
+      </div>
+    </a>
+    <a href="portfolio.html" class="quick-link-card">
+      <div class="quick-link-icon" style="background:#d1fae5">📁</div>
+      <div class="quick-link-info">
+        <h3>อัพโหลด Portfolio</h3>
+        <p>แฟ้มสะสมผลงาน เอกสารประกอบ</p>
+      </div>
+    </a>
+    <a href="tracking.html" class="quick-link-card">
+      <div class="quick-link-icon" style="background:#ede9fe">📊</div>
+      <div class="quick-link-info">
+        <h3>ติดตามการสมัคร</h3>
+        <p>สถานะการสมัครเรียนต่อ</p>
+      </div>
+    </a>
+  </div>
+
+  <!-- NEWS + EVENTS -->
+  <div class="grid-2">
+    <!-- News -->
+    <div class="card">
+      <div class="card-header">
+        <h2>📢 ข่าวสารและประกาศ</h2>
+      </div>
+      <div class="card-body" id="newsFeed">
+        <div class="news-item">
+          <div class="news-date"><div>02</div><div>มิ.ย.</div></div>
+          <div>
+            <div class="news-title">เปิดรับสมัครทุนเสมอภาค ปีการศึกษา 2567</div>
+            <div class="news-desc">สำหรับนักเรียนที่ขาดแคลนทุนทรัพย์ สมัครได้ถึง 30 มิ.ย. 67</div>
+          </div>
+        </div>
+        <div class="news-item">
+          <div class="news-date"><div>28</div><div>พ.ค.</div></div>
+          <div>
+            <div class="news-title">ประกาศผลการสมัคร TCAS67 รอบ 2</div>
+            <div class="news-desc">นักเรียนสามารถตรวจสอบผลผ่านระบบ mytcas.com</div>
+          </div>
+        </div>
+        <div class="news-item">
+          <div class="news-date"><div>20</div><div>พ.ค.</div></div>
+          <div>
+            <div class="news-title">กำหนดส่งแฟ้มสะสมผลงาน (Portfolio)</div>
+            <div class="news-desc">นักเรียน ม.6 ที่ต้องการสมัคร TCAS รอบ 1 ส่งภายใน 31 พ.ค.</div>
+          </div>
+        </div>
+        <div class="news-item">
+          <div class="news-date"><div>15</div><div>พ.ค.</div></div>
+          <div>
+            <div class="news-title">ทุนกองทุนเงินให้กู้ยืม (กยศ.) เปิดรับคำขอกู้</div>
+            <div class="news-desc">นักเรียนที่สนใจกู้ยืม กยศ. ติดต่อครูแนะแนวได้เลย</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming Events -->
+    <div class="calendar-widget card">
+      <div class="card-header">
+        <h2>📅 กิจกรรมที่กำลังจะมาถึง</h2>
+      </div>
+      <div id="eventList">
+        <div class="event-item">
+          <div class="event-dot" style="background:#3b82f6"></div>
+          <div class="event-text">TCAS68 รอบ 1 Portfolio เปิดรับสมัคร</div>
+          <div class="event-date">ต.ค. 67</div>
+        </div>
+        <div class="event-item">
+          <div class="event-dot" style="background:#10b981"></div>
+          <div class="event-text">ปิดรับสมัครทุน กสศ. ประจำปี 67</div>
+          <div class="event-date">30 มิ.ย. 67</div>
+        </div>
+        <div class="event-item">
+          <div class="event-dot" style="background:#f59e0b"></div>
+          <div class="event-text">สอบ O-NET ม.6 ปีการศึกษา 2567</div>
+          <div class="event-date">ก.พ. 68</div>
+        </div>
+        <div class="event-item">
+          <div class="event-dot" style="background:#8b5cf6"></div>
+          <div class="event-text">กิจกรรมแนะแนวอาชีพ ม.3 และ ม.6</div>
+          <div class="event-date">ก.ค. 67</div>
+        </div>
+        <div class="event-item">
+          <div class="event-dot" style="background:#ef4444"></div>
+          <div class="event-text">ส่งเอกสารขอกู้ยืม กยศ. รอบสุดท้าย</div>
+          <div class="event-date">31 ก.ค. 67</div>
+        </div>
+        <div class="event-item">
+          <div class="event-dot" style="background:#3b82f6"></div>
+          <div class="event-text">TCAS68 รอบ 2 โควตา เปิดรับสมัคร</div>
+          <div class="event-date">ก.พ. 68</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="footer">
+  <p>งานแนะแนว โรงเรียนยางวิทยาคาร &nbsp;|&nbsp; อ.ศรีขรภูมิ จ.สุรินทร์ &nbsp;|&nbsp; ปีการศึกษา 2567</p>
+</footer>
+
+<script>
+  function toggleMenu() {
+    document.getElementById('navMenu').classList.toggle('open');
+  }
+
+  async function loadStats() {
+    try {
+      const [scholars, students, tracking, portfolio] = await Promise.all([
+        getData(COL.SCHOLARSHIPS),
+        getData(COL.STUDENTS),
+        getData(COL.TRACKING),
+        getData(COL.PORTFOLIO)
+      ]);
+      document.getElementById('statScholar').textContent  = scholars.filter(d => d.status === 'เปิดรับ').length;
+      document.getElementById('statStudents').textContent = students.length;
+      document.getElementById('statTracking').textContent = tracking.filter(d => d.status === 'กำลังดำเนินการ' || d.status === 'รอผล').length;
+      document.getElementById('statPortfolio').textContent= portfolio.length;
+    } catch(e) {
+      console.error('โหลดสถิติไม่ได้:', e);
+      ['statScholar','statStudents','statTracking','statPortfolio'].forEach(id => document.getElementById(id).textContent = '–');
+    }
+  }
+
+  loadStats();
+</script>
+</body>
+</html>

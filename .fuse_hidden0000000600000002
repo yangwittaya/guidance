@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ทุนการศึกษา - งานแนะแนว ยางวิทยาคาร</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="auth.js"></script>
+  <script src="config.js"></script>
+  <style>
+    .scholarship-card { background:white; border-radius:var(--radius); border:1px solid var(--gray-200); box-shadow:var(--shadow-sm); padding:1.5rem; transition:all 0.2s; }
+    .scholarship-card:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
+    .scholarship-header { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
+    .scholarship-type { display:inline-block; padding:.2rem .6rem; border-radius:50px; font-size:.75rem; font-weight:600; margin-bottom:.4rem; }
+    .scholarship-title { font-size:1.05rem; font-weight:700; color:var(--gray-800); }
+    .scholarship-amount { font-size:1.1rem; font-weight:700; color:var(--primary); white-space:nowrap; }
+    .scholarship-detail { font-size:.875rem; color:var(--gray-600); display:flex; align-items:center; gap:.4rem; margin-bottom:.35rem; }
+    .scholarship-actions { display:flex; gap:.5rem; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--gray-100); }
+    .scholarship-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px,1fr)); gap:1.25rem; }
+    .filter-bar { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .filter-btn { padding:.4rem 1rem; border-radius:50px; border:1.5px solid var(--gray-300); background:white; font-size:.85rem; font-weight:500; cursor:pointer; font-family:inherit; transition:all .2s; color:var(--gray-600); }
+    .filter-btn:hover { border-color:var(--primary); color:var(--primary); }
+    .filter-btn.active { background:var(--primary); color:white; border-color:var(--primary); }
+    .deadline-badge { display:flex; align-items:center; gap:.35rem; font-size:.82rem; }
+    .deadline-badge.urgent { color:var(--danger); }
+    .deadline-badge.soon   { color:var(--warning); }
+    .deadline-badge.ok     { color:var(--success); }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-brand">
+      <div class="navbar-logo">🎓</div>
+      <div class="navbar-title">งานแนะแนว<small>โรงเรียนยางวิทยาคาร</small></div>
+    </a>
+    <button class="hamburger" onclick="toggleMenu()">☰</button>
+    <ul class="navbar-nav" id="navMenu">
+      <li><a href="index.html">🏠 หน้าหลัก</a></li>
+      <li><a href="scholarships.html" class="active">🏆 ทุนการศึกษา</a></li>
+      <li><a href="students.html">📋 ทะเบียนนักเรียน</a></li>
+      <li><a href="portfolio.html">📁 Portfolio</a></li>
+      <li><a href="tracking.html">📊 ติดตามการสมัคร</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header">
+    <h1>🏆 ทุนการศึกษา</h1>
+    <p>ประกาศทุนการศึกษา ช่องทางสมัคร เงื่อนไข และคุณสมบัติ</p>
+  </div>
+
+  <div class="card" style="margin-bottom:1.5rem">
+    <div class="card-body" style="padding:1rem 1.5rem">
+      <div class="search-bar">
+        <div class="search-input-wrap" style="flex:1">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาทุนการศึกษา...">
+        </div>
+        <button class="btn btn-primary" id="btnAdd" onclick="openAddModal()">+ เพิ่มทุนใหม่</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterByType('all',this)">ทั้งหมด</button>
+    <button class="filter-btn" onclick="filterByType('เต็มจำนวน',this)">🌟 เต็มจำนวน</button>
+    <button class="filter-btn" onclick="filterByType('บางส่วน',this)">⭐ บางส่วน</button>
+    <button class="filter-btn" onclick="filterByType('กู้ยืม',this)">💳 กู้ยืม</button>
+    <button class="filter-btn" onclick="filterByType('ขาดแคลน',this)">❤️ ขาดแคลน</button>
+  </div>
+
+  <div id="scholarshipGrid" class="scholarship-grid">
+    <div class="loading" style="grid-column:1/-1"><div class="spinner"></div><p>กำลังโหลด...</p></div>
+  </div>
+</main>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <h3 id="modalTitle">🏆 เพิ่มทุนการศึกษา</h3>
+      <button class="modal-close" onclick="closeModal('addModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ชื่อทุน <span class="required">*</span></label>
+          <input type="text" class="form-control" id="fName" placeholder="เช่น ทุนเสมอภาค กสศ.">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ประเภท</label>
+          <select class="form-control" id="fType">
+            <option>เต็มจำนวน</option><option>บางส่วน</option><option>กู้ยืม</option><option>ขาดแคลน</option><option>ความสามารถ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">จำนวนเงิน</label>
+          <input type="text" class="form-control" id="fAmount" placeholder="เช่น 5,000 บาท/ปี">
+        </div>
+        <div class="form-group">
+          <label class="form-label">สถานะ</label>
+          <select class="form-control" id="fStatus">
+            <option>เปิดรับ</option><option>ปิดรับ</option><option>เร็วๆ นี้</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">วันเปิดรับสมัคร</label>
+          <input type="date" class="form-control" id="fOpen">
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันปิดรับสมัคร</label>
+          <input type="date" class="form-control" id="fClose">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">คุณสมบัติ</label>
+        <textarea class="form-control" id="fQual" placeholder="เงื่อนไข คุณสมบัติผู้สมัคร..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">เอกสารที่ต้องใช้</label>
+        <textarea class="form-control" id="fDocs" placeholder="รายการเอกสาร..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ช่องทางสมัคร / ลิงก์</label>
+        <input type="text" class="form-control" id="fLink" placeholder="https://...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addModal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveScholarship()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="viewModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="viewTitle">รายละเอียดทุน</h3>
+      <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+    </div>
+    <div class="modal-body" id="viewBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('viewModal')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><p>งานแนะแนว โรงเรียนยางวิทยาคาร &nbsp;|&nbsp; อ.ศรีขรภูมิ จ.สุรินทร์</p></footer>
+
+<script>
+  let allScholarships = [];
+  let currentFilter  = 'all';
+
+  function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
+  function openModal(id)  { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  const typeConfig = {
+    'เต็มจำนวน': { color:'#1e40af', bg:'#dbeafe' },
+    'บางส่วน':   { color:'#92400e', bg:'#fef3c7' },
+    'กู้ยืม':    { color:'#065f46', bg:'#d1fae5' },
+    'ขาดแคลน':  { color:'#991b1b', bg:'#fee2e2' },
+    'ความสามารถ':{ color:'#5b21b6', bg:'#ede9fe' },
+  };
+  const statusHtml = {
+    'เปิดรับ':  '<span class="badge badge-success">🟢 เปิดรับ</span>',
+    'ปิดรับ':   '<span class="badge badge-danger">🔴 ปิดรับ</span>',
+    'เร็วๆ นี้':'<span class="badge badge-warning">🟡 เร็วๆ นี้</span>',
+  };
+
+  async function loadScholarships() {
+    const grid = document.getElementById('scholarshipGrid');
+    try {
+      let data = await getData(COL.SCHOLARSHIPS);
+      if (!data.length) data = getDemoData();
+      allScholarships = data;
+      renderScholarships(allScholarships);
+    } catch(e) {
+      grid.innerHTML = `<div class="alert alert-danger" style="grid-column:1/-1">⚠️ โหลดข้อมูลไม่ได้: ${e.message}</div>`;
+    }
+  }
+
+  function getDemoData() {
+    return [
+      { id:'d1', name:'ทุนเสมอภาค (กสศ.)', type:'ขาดแคลน', amount:'3,000 บาท/ภาคเรียน', qualifications:'ขาดแคลนทุนทรัพย์ตามเกณฑ์ กสศ.', documents:'บัตรประชาชน, ทะเบียนบ้าน', openDate:'2024-05-01', closeDate:'2024-06-30', applyChannel:'ติดต่อครูแนะแนว', status:'เปิดรับ' },
+      { id:'d2', name:'กองทุนเงินให้กู้ยืม (กยศ.)', type:'กู้ยืม', amount:'ตามจริง/ปี', qualifications:'รายได้ครอบครัวไม่เกิน 360,000 บาท/ปี', documents:'บัตรประชาชน, ใบแสดงรายได้', openDate:'2024-06-01', closeDate:'2024-07-31', applyChannel:'https://www.studentloan.or.th', status:'เปิดรับ' },
+      { id:'d3', name:'ทุนมูลนิธิการศึกษาไทย', type:'เต็มจำนวน', amount:'50,000 บาท/ปี', qualifications:'GPA ≥ 3.50', documents:'ผลการเรียน, Portfolio', openDate:'2024-09-01', closeDate:'2024-10-31', applyChannel:'https://www.thaieduloans.com', status:'เร็วๆ นี้' },
+    ];
+  }
+
+  function renderScholarships(data) {
+    const grid = document.getElementById('scholarshipGrid');
+    if (!data.length) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🏆</div><p>ยังไม่มีข้อมูลทุนการศึกษา</p></div>`;
+      return;
+    }
+    grid.innerHTML = data.map(s => {
+      const tc = typeConfig[s.type] || { color:'#374151', bg:'#f3f4f6' };
+      const sh = statusHtml[s.status] || `<span class="badge badge-gray">${s.status||''}</span>`;
+      const deadline = s.closeDate ? formatDeadline(s.closeDate) : '';
+      return `
+      <div class="scholarship-card">
+        <div class="scholarship-header">
+          <div>
+            <span class="scholarship-type" style="background:${tc.bg};color:${tc.color}">${s.type||''}</span>
+            <div class="scholarship-title">${s.name||''}</div>
+          </div>
+          <div style="text-align:right">
+            ${sh}
+            <div class="scholarship-amount" style="margin-top:.25rem">${s.amount||'–'}</div>
+          </div>
+        </div>
+        ${s.qualifications ? `<div class="scholarship-detail">📌 ${s.qualifications.substring(0,80)}${s.qualifications.length>80?'...':''}</div>` : ''}
+        ${deadline}
+        <div class="scholarship-actions">
+          <button class="btn btn-secondary btn-sm" onclick="viewScholarship('${s.id}')">📄 รายละเอียด</button>
+          ${s.applyChannel?.startsWith('http')
+            ? `<a href="${s.applyChannel}" target="_blank" class="btn btn-primary btn-sm">📝 สมัครเลย</a>`
+            : `<button class="btn btn-primary btn-sm" onclick="alert('${s.applyChannel||'ติดต่อครูแนะแนว'}')">📝 วิธีสมัคร</button>`}
+          <button class="btn btn-secondary btn-sm" onclick="editScholarship('${s.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteScholarship('${s.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function formatDeadline(dateStr) {
+    const d = new Date(dateStr), now = new Date();
+    const diff = Math.ceil((d-now)/(1000*60*60*24));
+    if (diff < 0) return `<div class="deadline-badge" style="color:var(--gray-400)">📅 หมดเขตแล้ว</div>`;
+    const cls = diff<=7?'urgent':diff<=30?'soon':'ok';
+    const icon = diff<=7?'🔥':diff<=30?'⏰':'📅';
+    return `<div class="deadline-badge ${cls}">${icon} ปิดรับ ${d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})} (อีก ${diff} วัน)</div>`;
+  }
+
+  function filterByType(type, btn) {
+    currentFilter = type;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    let result = allScholarships;
+    if (currentFilter !== 'all') result = result.filter(s => s.type === currentFilter);
+    if (q) result = result.filter(s => Object.values(s).some(v => String(v).toLowerCase().includes(q)));
+    renderScholarships(result);
+  }
+
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+  function openAddModal() {
+    document.getElementById('editId').value = '';
+    document.getElementById('modalTitle').textContent = '🏆 เพิ่มทุนการศึกษา';
+    ['fName','fAmount','fOpen','fClose','fQual','fDocs','fLink'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fType').value   = 'เต็มจำนวน';
+    document.getElementById('fStatus').value = 'เปิดรับ';
+    openModal('addModal');
+  }
+
+  function viewScholarship(id) {
+    const s = allScholarships.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('viewTitle').textContent = '🏆 ' + s.name;
+    document.getElementById('viewBody').innerHTML = `
+      <div style="display:grid;gap:.75rem;font-size:.9rem">
+        <div class="form-row"><div><strong>ประเภท:</strong> ${s.type}</div><div><strong>สถานะ:</strong> ${statusHtml[s.status]||s.status}</div></div>
+        <div><strong>💰 จำนวนเงิน:</strong> ${s.amount||'–'}</div>
+        <div><strong>📅 ช่วงรับสมัคร:</strong> ${s.openDate||'–'} – ${s.closeDate||'–'}</div>
+        <div><strong>📌 คุณสมบัติ:</strong><br><span style="color:var(--gray-600)">${(s.qualifications||'–').replace(/\n/g,'<br>')}</span></div>
+        <div><strong>📄 เอกสาร:</strong><br><span style="color:var(--gray-600)">${(s.documents||'–').replace(/\n/g,'<br>')}</span></div>
+        <div><strong>🔗 ช่องทางสมัคร:</strong> ${s.applyChannel?.startsWith('http') ? `<a href="${s.applyChannel}" target="_blank" style="color:var(--primary)">${s.applyChannel}</a>` : (s.applyChannel||'–')}</div>
+      </div>`;
+    openModal('viewModal');
+  }
+
+  function editScholarship(id) {
+    const s = allScholarships.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('editId').value   = id;
+    document.getElementById('modalTitle').textContent = '✏️ แก้ไขทุนการศึกษา';
+    document.getElementById('fName').value    = s.name||'';
+    document.getElementById('fType').value    = s.type||'เต็มจำนวน';
+    document.getElementById('fAmount').value  = s.amount||'';
+    document.getElementById('fStatus').value  = s.status||'เปิดรับ';
+    document.getElementById('fOpen').value    = s.openDate||'';
+    document.getElementById('fClose').value   = s.closeDate||'';
+    document.getElementById('fQual').value    = s.qualifications||'';
+    document.getElementById('fDocs').value    = s.documents||'';
+    document.getElementById('fLink').value    = s.applyChannel||'';
+    openModal('addModal');
+  }
+
+  async function saveScholarship() {
+    const name = document.getElementById('fName').value.trim();
+    if (!name) { alert('กรุณากรอกชื่อทุน'); return; }
+    const data = {
+      name:          name,
+      type:          document.getElementById('fType').value,
+      amount:        document.getElementById('fAmount').value,
+      status:        document.getElementById('fStatus').value,
+      openDate:      document.getElementById('fOpen').value,
+      closeDate:     document.getElementById('fClose').value,
+      qualifications:document.getElementById('fQual').value,
+      documents:     document.getElementById('fDocs').value,
+      applyChannel:  document.getElementById('fLink').value,
+    };
+    const editId = document.getElementById('editId').value;
+    try {
+      if (editId) await updateData(COL.SCHOLARSHIPS, editId, data);
+      else await addData(COL.SCHOLARSHIPS, data);
+      closeModal('addModal');
+      loadScholarships();
+    } catch(e) { alert('บันทึกไม่สำเร็จ: ' + e.message); }
+  }
+
+  async function deleteScholarship(id) {
+    if (!confirm('ยืนยันลบทุนนี้?')) return;
+    await deleteData(COL.SCHOLARSHIPS, id);
+    loadScholarships();
+  }
+
+  loadScholarships();
+</script>
+</body>
+</html>
