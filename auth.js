@@ -80,7 +80,7 @@ function initAuth(options = {}) {
         currentProfile = doc.data();
         currentRole    = currentProfile.role || 'student';
 
-        // ตรวจสอบสถานะการอนุมัติ (ไม่ใช้กับ admin)
+        // ตรวจสอบสถานะการอนุมัติ (ข้ามสำหรับ admin เสมอ)
         if (currentRole !== 'admin') {
           const status = currentProfile.status;
           if (status === 'pending') {
@@ -95,13 +95,22 @@ function initAuth(options = {}) {
           }
         }
       } else {
-        // ถ้าไม่มีใน Firestore ให้เป็น student
-        currentRole = 'student';
-        currentProfile = { email: user.email, role: 'student', name: user.email };
+        // ถ้าไม่มีใน Firestore — ตรวจสอบ email ที่รู้จักว่าเป็น admin
+        const adminEmails = ['udensak55557@gmail.com', 'sanaichaiya@gmail.com'];
+        if (adminEmails.includes(user.email)) {
+          currentRole = 'admin';
+          currentProfile = { email: user.email, role: 'admin', displayName: user.email, status: 'approved' };
+        } else {
+          currentRole = 'student';
+          currentProfile = { email: user.email, role: 'student', name: user.email };
+        }
       }
     } catch(e) {
       console.error('ดึง profile ไม่ได้:', e);
-      currentRole = 'student';
+      // Fallback: ถ้า Firestore ล้มเหลว ให้ admin email ผ่านได้เสมอ
+      const adminEmails = ['udensak55557@gmail.com', 'sanaichaiya@gmail.com'];
+      currentRole = adminEmails.includes(user.email) ? 'admin' : 'student';
+      currentProfile = { email: user.email, role: currentRole, displayName: user.email };
     }
 
     // ตรวจสอบ role ที่อนุญาต
