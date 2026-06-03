@@ -372,20 +372,16 @@
 </div>
 
 <script>
-// ── State ──────────────────────────────────────────────
 let allUsers = [];
-let activeTab = 'pending';
 let selectedUid = null;
 let selectedUser = null;
 
-// ── Init ───────────────────────────────────────────────
 initAuth({
   requireAuth: true,
   allowedRoles: ['admin'],
   onReady: () => { loadUsers(); }
 });
 
-// ── Load Users from Firestore ──────────────────────────
 async function loadUsers() {
   try {
     const snap = await db.collection('users').get();
@@ -400,26 +396,22 @@ async function loadUsers() {
   } catch(err) {
     ['pendingBody','approvedBody','suspendedBody'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#6b7280">⚠️ โหลดข้อมูลไม่ได้ กรุณา Refresh</td></tr>`;
+      if (el) el.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:#6b7280">⚠️ โหลดข้อมูลไม่ได้: ${err.message}</td></tr>`;
     });
   }
 }
 
-// ── Stats ──────────────────────────────────────────────
 function updateStats() {
   const pending   = allUsers.filter(u => u.status === 'pending').length;
   const approved  = allUsers.filter(u => u.status === 'approved').length;
   const suspended = allUsers.filter(u => u.status === 'suspended').length;
-
   document.getElementById('cntPending').textContent   = pending;
   document.getElementById('cntApproved').textContent  = approved;
   document.getElementById('cntSuspended').textContent = suspended;
   document.getElementById('cntTotal').textContent     = allUsers.length;
-
   document.getElementById('badge-pending').textContent   = pending;
   document.getElementById('badge-approved').textContent  = approved;
   document.getElementById('badge-suspended').textContent = suspended;
-
   const banner = document.getElementById('pendingBanner');
   if (pending > 0) {
     banner.style.display = 'flex';
@@ -429,7 +421,6 @@ function updateStats() {
   }
 }
 
-// ── Helpers ────────────────────────────────────────────
 function getFiltered(status) {
   const q    = (document.getElementById('searchInput').value || '').toLowerCase();
   const role = document.getElementById('filterRole').value;
@@ -468,7 +459,6 @@ function extraInfo(u) {
   return u.position || '-';
 }
 
-// ── Render ─────────────────────────────────────────────
 function renderAll() { renderPending(); renderApproved(); renderSuspended(); }
 
 function renderPending() {
@@ -548,7 +538,6 @@ function renderSuspended() {
     </tr>`).join('');
 }
 
-// ── Actions ────────────────────────────────────────────
 async function approveUser(uid) {
   if (!confirm('อนุมัติผู้ใช้นี้?')) return;
   try {
@@ -575,7 +564,6 @@ async function restoreUser(uid) {
   } catch(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
-// ── View Modal ─────────────────────────────────────────
 function viewUser(uid) {
   selectedUid  = uid;
   selectedUser = allUsers.find(u => u.id === uid);
@@ -595,12 +583,9 @@ function viewUser(uid) {
     u.role==='teacher' ? ['ประจำชั้น', u.homeroom||'-'] : null,
     ['วันที่สมัคร', fmtDate(u.createdAt)],
   ].filter(Boolean);
-
-  document.getElementById('viewBody').innerHTML = rows.map(([l,v]) => `
-    <div class="detail-row">
-      <span class="detail-label">${l}</span>
-      <span class="detail-value">${v}</span>
-    </div>`).join('');
+  document.getElementById('viewBody').innerHTML = rows.map(([l,v]) =>
+    `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-value">${v}</span></div>`
+  ).join('');
   document.getElementById('pwReveal').style.display = 'none';
   openModal('viewModal');
 }
@@ -634,7 +619,6 @@ async function doResetPassword() {
   } catch(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
-// ── Suspend ────────────────────────────────────────────
 function openSuspend(uid) {
   selectedUid  = uid;
   selectedUser = allUsers.find(u => u.id === uid);
@@ -657,7 +641,6 @@ async function doSuspend() {
   } catch(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
-// ── Delete ─────────────────────────────────────────────
 function confirmDelete(uid) {
   selectedUid  = uid;
   selectedUser = allUsers.find(u => u.id === uid);
@@ -676,20 +659,16 @@ async function doDelete() {
   } catch(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
 
-// ── Tabs ───────────────────────────────────────────────
 function switchTab(tab) {
-  activeTab = tab;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   document.getElementById('panel-' + tab).classList.add('active');
 }
 
-// ── Modal Helpers ──────────────────────────────────────
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-// ── Toast ──────────────────────────────────────────────
 function showToast(msg, type='success') {
   let t = document.getElementById('_toast');
   if (!t) {

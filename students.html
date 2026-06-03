@@ -348,5 +348,16 @@
     if (q)   result = result.filter(s => Object.values(s).some(v => String(v).toLowerCase().includes(q)));
     renderStudents(result);
   }
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('filterClass').addEventListener('change', applyFilters);
 
-  document.getElementById('searchInput').addEv
+  function showReadOnlyBanner() {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.875rem;color:#92400e;';
+    banner.textContent = '👁️ คุณมีสิทธิ์ดูข้อมูลอย่างเดียว ไม่สามารถแก้ไขหรือลบได้';
+    document.querySelector('.main-content').prepend(banner);
+    document.querySelectorAll('.btn-danger, #addBtn').forEach(b => b.style.display = 'none');
+  }
+</script>
+</body>
+</html>
