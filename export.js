@@ -32,18 +32,24 @@ function createExportButton(containerId, options = {}) {
   btn.innerHTML = '📥 Export <span style="font-size:.7rem">▼</span>';
   btn.onclick = (e) => {
     e.stopPropagation();
-    // ปิด dropdown อื่นก่อน
-    document.querySelectorAll('.__export-menu').forEach(m => { if (m !== menu) m.style.display = 'none'; });
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    document.querySelectorAll('.__export-menu').forEach(m => { m.style.display = 'none'; });
+    if (menu.style.display === 'block') { menu.style.display = 'none'; return; }
+    // คำนวณตำแหน่งจาก button
+    const rect = btn.getBoundingClientRect();
+    menu.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+    menu.style.left = (rect.right + window.scrollX - 170) + 'px';
+    menu.style.display = 'block';
   };
 
   const menu = document.createElement('div');
   menu.className = '__export-menu';
   menu.style.cssText = `
-    display:none; position:absolute; top:calc(100% + 4px); right:0;
+    display:none; position:absolute; top:0; left:0;
     background:white; border:1.5px solid #e5e7eb; border-radius:10px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.15); min-width:170px; z-index:9999; overflow:hidden;
+    box-shadow:0 8px 24px rgba(0,0,0,0.15); min-width:170px; z-index:99999;
+    overflow:hidden;
   `;
+  document.body.appendChild(menu);
 
   const items = [];
   if (options.excel) items.push({ icon: '📊', label: 'Excel (.xlsx)', fn: options.excel });
@@ -63,7 +69,6 @@ function createExportButton(containerId, options = {}) {
   document.addEventListener('click', () => { menu.style.display = 'none'; });
 
   wrap.appendChild(btn);
-  wrap.appendChild(menu);
   container.appendChild(wrap);
 }
 
