@@ -10,6 +10,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="config.js"></script>
   <script src="auth.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="export.js"></script>
   <style>
     .kanban-board { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:2rem; }
     .kanban-col { background:var(--gray-50); border-radius:var(--radius); border:1px solid var(--gray-200); overflow:hidden; }
@@ -73,6 +75,7 @@
           <button class="btn btn-primary"   id="btnTable"  onclick="setView('table')">📋 ตาราง</button>
           <button class="btn btn-secondary" id="btnKanban" onclick="setView('kanban')">📌 กระดาน</button>
         </div>
+        <div id="exportBtnTracking"></div>
         <button class="btn btn-primary" data-perm="tracking.editOwn" onclick="openAddModal()">+ เพิ่มรายการ</button>
       </div>
     </div>
@@ -373,6 +376,20 @@
   document.getElementById('searchInput').addEventListener('input', applyFilters);
   document.getElementById('filterRound').addEventListener('change', applyFilters);
 
+
+  // ── Export ──
+  const HDR_TRK = ['#','ชื่อนักเรียน','สถาบัน','สาขา','รอบ','สถานะ','หมายเหตุ'];
+  function getTrkRows() {
+    return getFiltered().map((t,i) => [
+      i+1, t.studentName||'-', t.university||'-', t.faculty||'-',
+      t.round||'-', t.status||'-', t.note||'-'
+    ]);
+  }
+  createExportButton('exportBtnTracking', {
+    excel: () => { exportExcel(HDR_TRK, getTrkRows(), 'ติดตามการสมัคร', 'ติดตามการสมัคร'); exportToast('📊 ดาวน์โหลด Excel แล้ว'); },
+    pdf:   () => exportPDF('ติดตามการสมัคร', HDR_TRK, getTrkRows(), ['4%','20%','22%','16%','14%','12%','12%']),
+    word:  () => { exportWord('ติดตามการสมัคร', HDR_TRK, getTrkRows()); exportToast('📝 ดาวน์โหลด Word แล้ว'); }
+  });
   // loadTrackings() ถูกเรียกจาก initAuth onReady แล้ว
 </script>
 </body>

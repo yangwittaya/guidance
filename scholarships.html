@@ -10,6 +10,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="config.js"></script>
   <script src="auth.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="export.js"></script>
   <style>
     .scholarship-card { background:white; border-radius:var(--radius); border:1px solid var(--gray-200); box-shadow:var(--shadow-sm); padding:1.5rem; transition:all 0.2s; }
     .scholarship-card:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
@@ -63,6 +65,7 @@
           <span class="search-icon">🔍</span>
           <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาทุนการศึกษา...">
         </div>
+        <div id="exportBtnScholarship"></div>
         <button class="btn btn-primary" id="btnAdd" data-perm="scholarship.edit" onclick="openAddModal()">+ เพิ่มทุนใหม่</button>
       </div>
     </div>
@@ -161,6 +164,7 @@
 <footer class="footer"><p>งานแนะแนว โรงเรียนยางวิทยาคาร &nbsp;|&nbsp; อ.ศรีขรภูมิ จ.สุรินทร์</p></footer>
 
 <script>
+  window._scholarships = [];
   let allScholarships = [];
   let currentFilter  = 'all';
 
@@ -190,6 +194,7 @@
       let data = await getData(COL.SCHOLARSHIPS);
       if (!data.length) data = getDemoData();
       allScholarships = data;
+      window._scholarships = data;
       renderScholarships(allScholarships);
     } catch(e) {
       grid.innerHTML = `<div class="alert alert-danger" style="grid-column:1/-1">⚠️ โหลดข้อมูลไม่ได้: ${e.message}</div>`;
@@ -337,6 +342,20 @@
     loadScholarships();
   }
 
+
+  // ── Export ──
+  const HDR_SCH = ['#','ชื่อทุน','ประเภท','จำนวนเงิน','สถานะ','วันเปิด','วันปิด'];
+  function getSchRows() {
+    return (window._scholarships||[]).map((s,i) => [
+      i+1, s.name||'-', s.type||'-', s.amount||'-',
+      s.status||'-', s.openDate||'-', s.closeDate||'-'
+    ]);
+  }
+  createExportButton('exportBtnScholarship', {
+    excel: () => { exportExcel(HDR_SCH, getSchRows(), 'ทุนการศึกษา', 'ทุนการศึกษา'); exportToast('📊 ดาวน์โหลด Excel แล้ว'); },
+    pdf:   () => exportPDF('ทุนการศึกษา', HDR_SCH, getSchRows(), ['4%','30%','12%','14%','10%','12%','12%']),
+    word:  () => { exportWord('ทุนการศึกษา', HDR_SCH, getSchRows()); exportToast('📝 ดาวน์โหลด Word แล้ว'); }
+  });
   // loadScholarships() ถูกเรียกจาก initAuth onReady แล้ว
 </script>
 </body>

@@ -10,6 +10,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="config.js"></script>
   <script src="auth.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="export.js"></script>
   <style>
     .portfolio-card { background:white; border-radius:var(--radius); border:1px solid var(--gray-200); box-shadow:var(--shadow-sm); padding:1.25rem; transition:all .2s; }
     .portfolio-card:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
@@ -163,6 +165,7 @@
               <span class="search-icon">🔍</span>
               <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาชื่อหรือรหัส...">
             </div>
+            <div id="exportBtnPortfolio"></div>
             <select class="form-control" id="filterType" style="width:auto">
               <option value="">ทุกประเภท</option>
               <option>แฟ้มสะสมผลงาน (Portfolio)</option>
@@ -183,6 +186,7 @@
 <footer class="footer"><p>งานแนะแนว โรงเรียนยางวิทยาคาร &nbsp;|&nbsp; อ.ศรีขรภูมิ จ.สุรินทร์</p></footer>
 
 <script>
+  window._portfolios = [];
   let allPortfolios = [];
   let selectedFile  = null;
 
@@ -233,6 +237,7 @@
       let data = await getData(COL.PORTFOLIO);
       if (!data.length) data = getDemoPortfolios();
       allPortfolios = data;
+      window._portfolios = data;
       renderPortfolios(allPortfolios);
     } catch(e) {
       document.getElementById('portfolioGrid').innerHTML = `<div class="alert alert-danger">⚠️ ${e.message}</div>`;
@@ -383,6 +388,20 @@
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('student')) document.getElementById('fStudentId').value = urlParams.get('student');
 
+
+  // ── Export ──
+  const HDR_PF = ['#','รหัสนักเรียน','ชื่อไฟล์','ประเภท','ขนาด','วันที่อัปโหลด'];
+  function getPfRows() {
+    return (window._portfolios||[]).map((p,i) => [
+      i+1, p.studentId||'-', p.name||'-', p.fileType||'-',
+      p.size||'-', p.createdAt ? new Date(p.createdAt.seconds*1000).toLocaleDateString('th-TH') : '-'
+    ]);
+  }
+  createExportButton('exportBtnPortfolio', {
+    excel: () => { exportExcel(HDR_PF, getPfRows(), 'Portfolio', 'Portfolio'); exportToast('📊 ดาวน์โหลด Excel แล้ว'); },
+    pdf:   () => exportPDF('แฟ้มสะสมผลงาน (Portfolio)', HDR_PF, getPfRows(), ['4%','14%','32%','12%','10%','18%']),
+    word:  () => { exportWord('แฟ้มสะสมผลงาน', HDR_PF, getPfRows()); exportToast('📝 ดาวน์โหลด Word แล้ว'); }
+  });
   // loadPortfolios() ถูกเรียกจาก initAuth onReady แล้ว
 </script>
 </body>
