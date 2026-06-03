@@ -30,13 +30,19 @@ function createExportButton(containerId, options = {}) {
   btn.className = 'btn btn-secondary';
   btn.style.cssText = 'display:flex;align-items:center;gap:.4rem';
   btn.innerHTML = '📥 Export <span style="font-size:.7rem">▼</span>';
-  btn.onclick = (e) => { e.stopPropagation(); menu.style.display = menu.style.display === 'block' ? 'none' : 'block'; };
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    // ปิด dropdown อื่นก่อน
+    document.querySelectorAll('.__export-menu').forEach(m => { if (m !== menu) m.style.display = 'none'; });
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  };
 
   const menu = document.createElement('div');
+  menu.className = '__export-menu';
   menu.style.cssText = `
     display:none; position:absolute; top:calc(100% + 4px); right:0;
     background:white; border:1.5px solid #e5e7eb; border-radius:10px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.12); min-width:160px; z-index:500; overflow:hidden;
+    box-shadow:0 8px 24px rgba(0,0,0,0.15); min-width:170px; z-index:9999; overflow:hidden;
   `;
 
   const items = [];
@@ -50,7 +56,7 @@ function createExportButton(containerId, options = {}) {
     a.innerHTML = `<span>${item.icon}</span> ${item.label}`;
     a.onmouseover = () => a.style.background = '#f3f4f6';
     a.onmouseout  = () => a.style.background = 'none';
-    a.onclick = () => { menu.style.display = 'none'; item.fn(); };
+    a.onclick = (e) => { e.stopPropagation(); menu.style.display = 'none'; item.fn(); };
     menu.appendChild(a);
   });
 
