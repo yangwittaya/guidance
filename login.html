@@ -203,7 +203,7 @@
 <div class="login-container">
   <!-- Logo -->
   <div class="logo-wrap">
-    <div class="logo-icon">🎓</div>
+    <img src="logo.png" alt="ตราโรงเรียน" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.5);box-shadow:0 4px 15px rgba(0,0,0,0.2)">
     <div class="logo-title">งานแนะแนว</div>
     <div class="logo-sub">โรงเรียนยางวิทยาคาร อ.ศรีขรภูมิ จ.สุรินทร์</div>
   </div>
@@ -302,28 +302,4 @@
         'auth/too-many-requests':   'ลองใหม่อีกครั้งในภายหลัง (ลองหลายครั้งเกินไป)',
         'auth/invalid-credential':  'Email หรือรหัสผ่านไม่ถูกต้อง',
       };
-      showAlert('danger', msgs[err.code] || 'เกิดข้อผิดพลาด: ' + err.message);
-    }
-  }
-
-  async function forgotPassword() {
-    const email = document.getElementById('email').value.trim();
-    if (!email) {
-      showAlert('danger', 'กรุณากรอก Email ก่อนแล้วคลิกลืมรหัสผ่าน');
-      return;
-    }
-    try {
-      await firebase.auth().sendPasswordResetEmail(email);
-      showAlert('success', `ส่งลิงก์รีเซ็ตรหัสผ่านไปที่ ${email} แล้ว กรุณาตรวจสอบอีเมล`);
-    } catch(err) {
-      showAlert('danger', 'ส่งอีเมลไม่สำเร็จ: ' + err.message);
-    }
-  }
-
-  function togglePw() {
-    const inp = document.getElementById('password');
-    inp.type = inp.type === 'password' ? 'text' : 'password';
-  }
-</script>
-</body>
-</html>
+ 
