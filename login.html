@@ -302,4 +302,28 @@
         'auth/too-many-requests':   'ลองใหม่อีกครั้งในภายหลัง (ลองหลายครั้งเกินไป)',
         'auth/invalid-credential':  'Email หรือรหัสผ่านไม่ถูกต้อง',
       };
- 
+      showAlert('danger', msgs[err.code] || 'เกิดข้อผิดพลาด: ' + err.message);
+    }
+  }
+
+  function togglePw() {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  async function forgotPassword() {
+    const email = document.getElementById('email').value.trim();
+    if (!email) {
+      showAlert('danger', 'กรุณากรอก Email ก่อนกด "ลืมรหัสผ่าน"');
+      return;
+    }
+    try {
+      await firebase.auth().sendPasswordResetEmail(email);
+      showAlert('success', 'ส่งลิงก์รีเซ็ตรหัสผ่านไปที่ ' + email + ' แล้ว');
+    } catch(err) {
+      showAlert('danger', 'ไม่สามารถส่งอีเมลได้: ' + err.message);
+    }
+  }
+</script>
+</body>
+</html>
