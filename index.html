@@ -7,7 +7,9 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="config.js"></script>
+  <script src="auth.js"></script>
   <style>
     .hero {
       background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
@@ -134,7 +136,9 @@
       <li><a href="students.html">📋 ทะเบียนนักเรียน</a></li>
       <li><a href="portfolio.html">📁 Portfolio</a></li>
       <li><a href="tracking.html">📊 ติดตามการสมัคร</a></li>
+      <li data-role="admin"><a href="admin.html">⚙️ จัดการผู้ใช้</a></li>
     </ul>
+    <div id="navUserInfo"></div>
   </div>
 </nav>
 
@@ -302,6 +306,9 @@
     document.getElementById('navMenu').classList.toggle('open');
   }
 
+  // ── AUTH ──
+  initAuth({ requireAuth: true, onReady: () => loadStats() });
+
   async function loadStats() {
     try {
       const [scholars, students, tracking, portfolio] = await Promise.all([
@@ -320,7 +327,7 @@
     }
   }
 
-  loadStats();
+  // loadStats() ถูกเรียกจาก initAuth onReady แล้ว
 </script>
 </body>
 </html>

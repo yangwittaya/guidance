@@ -7,7 +7,9 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="config.js"></script>
+  <script src="auth.js"></script>
   <style>
     .kanban-board { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:2rem; }
     .kanban-col { background:var(--gray-50); border-radius:var(--radius); border:1px solid var(--gray-200); overflow:hidden; }
@@ -36,6 +38,7 @@
       <li><a href="portfolio.html">📁 Portfolio</a></li>
       <li><a href="tracking.html" class="active">📊 ติดตามการสมัคร</a></li>
     </ul>
+    <div id="navUserInfo"></div>
   </div>
 </nav>
 
@@ -70,7 +73,7 @@
           <button class="btn btn-primary"   id="btnTable"  onclick="setView('table')">📋 ตาราง</button>
           <button class="btn btn-secondary" id="btnKanban" onclick="setView('kanban')">📌 กระดาน</button>
         </div>
-        <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่มรายการ</button>
+        <button class="btn btn-primary" data-perm="tracking.editOwn" onclick="openAddModal()">+ เพิ่มรายการ</button>
       </div>
     </div>
   </div>
@@ -188,6 +191,11 @@
   let currentView  = 'table';
 
   function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
+  // ── AUTH ──
+  initAuth({ requireAuth: true, onReady: (user, role) => {
+    loadTrackings();
+    if (role === 'teacher' || role === 'exec') showReadOnlyBanner();
+  }});
   function openModal(id)  { document.getElementById(id).classList.add('active'); }
   function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
@@ -365,7 +373,7 @@
   document.getElementById('searchInput').addEventListener('input', applyFilters);
   document.getElementById('filterRound').addEventListener('change', applyFilters);
 
-  loadTrackings();
+  // loadTrackings() ถูกเรียกจาก initAuth onReady แล้ว
 </script>
 </body>
 </html>

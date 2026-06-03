@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เข้าสู่ระบบ - งานแนะแนว ยางวิทยาคาร</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="config.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a56a4 0%, #0d3b7a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* Logo */
+    .logo-wrap {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: white;
+    }
+    .logo-icon {
+      width: 80px; height: 80px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem;
+      margin: 0 auto 1rem;
+      backdrop-filter: blur(10px);
+    }
+    .logo-title { font-size: 1.5rem; font-weight: 700; }
+    .logo-sub   { font-size: 0.9rem; opacity: 0.8; margin-top: 0.25rem; }
+
+    /* Card */
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .login-card h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 0.25rem;
+    }
+    .login-card p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 1.75rem;
+    }
+
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.4rem;
+    }
+    .form-control {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.925rem;
+      color: #1f2937;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .form-control:focus {
+      border-color: #1a56a4;
+      box-shadow: 0 0 0 3px rgba(26,86,164,.12);
+    }
+
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute;
+      left: 0.875rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+    .input-wrap .form-control { padding-left: 2.5rem; }
+
+    .toggle-pw {
+      position: absolute;
+      right: 0.875rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #9ca3af;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 0.8rem;
+      background: linear-gradient(135deg, #1a56a4, #0d3b7a);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,86,164,.4); }
+    .btn-login:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    .alert {
+      padding: 0.875rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .alert-danger  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+
+    .divider {
+      text-align: center;
+      margin: 1.25rem 0;
+      position: relative;
+    }
+    .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0; right: 0;
+      height: 1px;
+      background: #e5e7eb;
+    }
+    .divider span {
+      background: white;
+      padding: 0 0.75rem;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      position: relative;
+    }
+
+    /* Role badges */
+    .role-hint {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #f3f4f6;
+    }
+    .role-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .rb-admin   { background: #fef3c7; color: #92400e; }
+    .rb-teacher { background: #dbeafe; color: #1e40af; }
+    .rb-student { background: #d1fae5; color: #065f46; }
+    .rb-exec    { background: #ede9fe; color: #5b21b6; }
+
+    .forgot-link {
+      display: block;
+      text-align: right;
+      font-size: 0.8rem;
+      color: #1a56a4;
+      text-decoration: none;
+      margin-top: 0.5rem;
+      cursor: pointer;
+    }
+    .forgot-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <!-- Logo -->
+  <div class="logo-wrap">
+    <div class="logo-icon">🎓</div>
+    <div class="logo-title">งานแนะแนว</div>
+    <div class="logo-sub">โรงเรียนยางวิทยาคาร อ.ศรีขรภูมิ จ.สุรินทร์</div>
+  </div>
+
+  <!-- Card -->
+  <div class="login-card">
+    <h2>เข้าสู่ระบบ</h2>
+    <p>กรอก Email และรหัสผ่านที่ได้รับจากครูแนะแนว</p>
+
+    <div id="alertBox" style="display:none"></div>
+
+    <form onsubmit="doLogin(event)">
+      <div class="form-group">
+        <label class="form-label">อีเมล</label>
+        <div class="input-wrap">
+          <span class="input-icon">📧</span>
+          <input type="email" class="form-control" id="email"
+            placeholder="example@school.ac.th" required autocomplete="email">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">รหัสผ่าน</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" class="form-control" id="password"
+            placeholder="••••••••" required autocomplete="current-password">
+          <button type="button" class="toggle-pw" onclick="togglePw()">👁️</button>
+        </div>
+        <a class="forgot-link" onclick="forgotPassword()">ลืมรหัสผ่าน?</a>
+      </div>
+
+      <button type="submit" class="btn-login" id="btnLogin">
+        🔐 เข้าสู่ระบบ
+      </button>
+    </form>
+
+    <!-- Role hint -->
+    <div class="role-hint">
+      <div class="role-badge rb-admin">👑 Admin</div>
+      <div class="role-badge rb-teacher">👨‍🏫 ครู</div>
+      <div class="role-badge rb-student">👨‍🎓 นักเรียน</div>
+      <div class="role-badge rb-exec">🏫 ผู้บริหาร</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ตรวจสอบว่า Login อยู่แล้วหรือยัง
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) window.location.href = 'index.html';
+  });
+
+  function showAlert(type, msg) {
+    const box = document.getElementById('alertBox');
+    box.style.display = 'flex';
+    box.className = 'alert alert-' + type;
+    box.innerHTML = `<span>${type === 'danger' ? '⚠️' : '✅'}</span> ${msg}`;
+  }
+
+  async function doLogin(e) {
+    e.preventDefault();
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('btnLogin');
+
+    btn.disabled = true;
+    btn.innerHTML = '⏳ กำลังเข้าสู่ระบบ...';
+    document.getElementById('alertBox').style.display = 'none';
+
+    try {
+      await firebase.auth().signInWithEmailAndPassword(email, password);
+      showAlert('success', 'เข้าสู่ระบบสำเร็จ! กำลังพาไปหน้าหลัก...');
+      setTimeout(() => window.location.href = 'index.html', 800);
+    } catch(err) {
+      btn.disabled = false;
+      btn.innerHTML = '🔐 เข้าสู่ระบบ';
+      const msgs = {
+        'auth/user-not-found':      'ไม่พบบัญชีนี้ในระบบ',
+        'auth/wrong-password':      'รหัสผ่านไม่ถูกต้อง',
+        'auth/invalid-email':       'รูปแบบ Email ไม่ถูกต้อง',
+        'auth/too-many-requests':   'ลองใหม่อีกครั้งในภายหลัง (ลองหลายครั้งเกินไป)',
+        'auth/invalid-credential':  'Email หรือรหัสผ่านไม่ถูกต้อง',
+      };
+      showAlert('danger', msgs[err.code] || 'เกิดข้อผิดพลาด: ' + err.message);
+    }
+  }
+
+  async function forgotPassword() {
+    const email = document.getElementById('email').value.trim();
+    if (!email) {
+      showAlert('danger', 'กรุณากรอก Email ก่อนแล้วคลิกลืมรหัสผ่าน');
+      return;
+    }
+    try {
+      await firebase.auth().sendPasswordResetEmail(email);
+      showAlert('success', `ส่งลิงก์รีเซ็ตรหัสผ่านไปที่ ${email} แล้ว กรุณาตรวจสอบอีเมล`);
+    } catch(err) {
+      showAlert('danger', 'ส่งอีเมลไม่สำเร็จ: ' + err.message);
+    }
+  }
+
+  function togglePw() {
+    const inp = document.getElementById('password');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+</script>
+</body>
+</html>

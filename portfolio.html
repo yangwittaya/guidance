@@ -7,7 +7,9 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="config.js"></script>
+  <script src="auth.js"></script>
   <style>
     .portfolio-card { background:white; border-radius:var(--radius); border:1px solid var(--gray-200); box-shadow:var(--shadow-sm); padding:1.25rem; transition:all .2s; }
     .portfolio-card:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
@@ -42,7 +44,9 @@
       <li><a href="students.html">📋 ทะเบียนนักเรียน</a></li>
       <li><a href="portfolio.html" class="active">📁 Portfolio</a></li>
       <li><a href="tracking.html">📊 ติดตามการสมัคร</a></li>
+      <li data-role="admin"><a href="admin.html">⚙️ จัดการผู้ใช้</a></li>
     </ul>
+    <div id="navUserInfo"></div>
   </div>
 </nav>
 
@@ -183,6 +187,9 @@
   let selectedFile  = null;
 
   function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
+
+  // ── AUTH ──
+  initAuth({ requireAuth: true, onReady: () => loadPortfolios() });
 
   const fileIcons = {
     'แฟ้มสะสมผลงาน (Portfolio)': { icon:'📂', bg:'#dbeafe' },
@@ -376,7 +383,7 @@
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('student')) document.getElementById('fStudentId').value = urlParams.get('student');
 
-  loadPortfolios();
+  // loadPortfolios() ถูกเรียกจาก initAuth onReady แล้ว
 </script>
 </body>
 </html>

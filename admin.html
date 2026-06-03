@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>จัดการผู้ใช้ - งานแนะแนว ยางวิทยาคาร</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <style>
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 50px; font-size: .78rem; font-weight: 700;
+    }
+    .rb-admin   { background:#fef3c7; color:#92400e; }
+    .rb-teacher { background:#dbeafe; color:#1e40af; }
+    .rb-student { background:#d1fae5; color:#065f46; }
+    .rb-exec    { background:#ede9fe; color:#5b21b6; }
+    .avatar {
+      width:36px; height:36px; border-radius:50%;
+      background:var(--primary-light); color:var(--primary);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:.95rem; flex-shrink:0;
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-brand">
+      <div class="navbar-logo">🎓</div>
+      <div class="navbar-title">งานแนะแนว<small>โรงเรียนยางวิทยาคาร</small></div>
+    </a>
+    <button class="hamburger" onclick="toggleMenu()">☰</button>
+    <ul class="navbar-nav" id="navMenu">
+      <li><a href="index.html">🏠 หน้าหลัก</a></li>
+      <li><a href="scholarships.html">🏆 ทุนการศึกษา</a></li>
+      <li><a href="students.html">📋 ทะเบียนนักเรียน</a></li>
+      <li><a href="portfolio.html">📁 Portfolio</a></li>
+      <li><a href="tracking.html">📊 ติดตามการสมัคร</a></li>
+      <li><a href="admin.html" class="active">⚙️ จัดการผู้ใช้</a></li>
+    </ul>
+    <div id="navUserInfo"></div>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header">
+    <h1>⚙️ จัดการบัญชีผู้ใช้</h1>
+    <p>เพิ่ม แก้ไข และกำหนดสิทธิ์ผู้ใช้งานในระบบ</p>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid" style="margin-bottom:1.5rem">
+    <div class="stat-card"><div class="stat-icon" style="background:#fef3c7;font-size:1.5rem">👑</div><div class="stat-info"><div class="stat-number" id="cntAdmin">–</div><div class="stat-label">Admin</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#dbeafe;font-size:1.5rem">👨‍🏫</div><div class="stat-info"><div class="stat-number" id="cntTeacher">–</div><div class="stat-label">ครู</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#d1fae5;font-size:1.5rem">👨‍🎓</div><div class="stat-info"><div class="stat-number" id="cntStudent">–</div><div class="stat-label">นักเรียน</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#ede9fe;font-size:1.5rem">🏫</div><div class="stat-info"><div class="stat-number" id="cntExec">–</div><div class="stat-label">ผู้บริหาร</div></div></div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="card" style="margin-bottom:1.5rem">
+    <div class="card-body" style="padding:1rem 1.5rem">
+      <div class="search-bar">
+        <div class="search-input-wrap" style="flex:1">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาชื่อหรืออีเมล...">
+        </div>
+        <select class="form-control" id="filterRole" style="width:auto">
+          <option value="">ทุก Role</option>
+          <option value="admin">👑 Admin</option>
+          <option value="teacher">👨‍🏫 ครู</option>
+          <option value="student">👨‍🎓 นักเรียน</option>
+          <option value="exec">🏫 ผู้บริหาร</option>
+        </select>
+        <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่มผู้ใช้ใหม่</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="card">
+    <div class="card-header">
+      <h2>👥 รายชื่อผู้ใช้งาน</h2>
+      <span id="totalCount" class="badge badge-info">0 คน</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ผู้ใช้</th><th>อีเมล</th><th>Role</th>
+            <th>รหัสนักเรียน</th><th>วันที่สร้าง</th><th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="userBody">
+          <tr><td colspan="6" class="loading"><div class="spinner"></div><br>กำลังโหลด...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">👤 เพิ่มผู้ใช้ใหม่</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editUid">
+
+      <div class="alert alert-info" id="editNote" style="display:none">
+        ℹ️ การแก้ไขจะอัพเดตข้อมูลโปรไฟล์ใน Firestore เท่านั้น ไม่เปลี่ยน Email/Password
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">ชื่อ-นามสกุล <span style="color:red">*</span></label>
+        <input type="text" class="form-control" id="fName" placeholder="ชื่อเต็ม">
+      </div>
+      <div class="form-group">
+        <label class="form-label">อีเมล <span style="color:red">*</span></label>
+        <input type="email" class="form-control" id="fEmail" placeholder="email@example.com">
+      </div>
+      <div class="form-group" id="pwGroup">
+        <label class="form-label">รหัสผ่าน <span style="color:red">*</span></label>
+        <input type="password" class="form-control" id="fPassword" placeholder="อย่างน้อย 6 ตัวอักษร">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Role <span style="color:red">*</span></label>
+          <select class="form-control" id="fRole" onchange="toggleStudentCode()">
+            <option value="admin">👑 Admin</option>
+            <option value="teacher">👨‍🏫 ครู</option>
+            <option value="student" selected>👨‍🎓 นักเรียน</option>
+            <option value="exec">🏫 ผู้บริหาร</option>
+          </select>
+        </div>
+        <div class="form-group" id="studentCodeGroup">
+          <label class="form-label">รหัสนักเรียน</label>
+          <input type="text" class="form-control" id="fStudentCode" placeholder="เช่น 67001">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-primary" id="btnSave" onclick="saveUser()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><p>งานแนะแนว โรงเรียนยางวิทยาคาร &nbsp;|&nbsp; อ.ศรีขรภูมิ จ.สุรินทร์</p></footer>
+
+<script>
+  let allUsers = [];
+  function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
+  function openModalEl(id)  { document.getElementById(id).classList.add('active'); }
+  function closeModal()  { document.getElementById('userModal').classList.remove('active'); }
+  function toggleStudentCode() {
+    const role = document.getElementById('fRole').value;
+    document.getElementById('studentCodeGroup').style.display = role === 'student' ? '' : 'none';
+  }
+
+  const roleLabels = { admin:'👑 Admin', teacher:'👨‍🏫 ครู', student:'👨‍🎓 นักเรียน', exec:'🏫 ผู้บริหาร' };
+  const roleClass  = { admin:'rb-admin', teacher:'rb-teacher', student:'rb-student', exec:'rb-exec' };
+
+  initAuth({
+    requireAuth: true,
+    allowedRoles: ['admin'],
+    onReady: () => loadUsers()
+  });
+
+  async function loadUsers() {
+    try {
+      const snap = await db.collection('users').orderBy('createdAt','desc').get();
+      allUsers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+      renderUsers(allUsers);
+      updateStats(allUsers);
+    } catch(e) {
+      document.getElementById('userBody').innerHTML = `<tr><td colspan="6"><div class="alert alert-danger">⚠️ ${e.message}</div></td></tr>`;
+    }
+  }
+
+  function updateStats(data) {
+    document.getElementById('cntAdmin').textContent   = data.filter(u=>u.role==='admin').length;
+    document.getElementById('cntTeacher').textContent = data.filter(u=>u.role==='teacher').length;
+    document.getElementById('cntStudent').textContent = data.filter(u=>u.role==='student').length;
+    document.getElementById('cntExec').textContent    = data.filter(u=>u.role==='exec').length;
+  }
+
+  function renderUsers(data) {
+    document.getElementById('totalCount').textContent = data.length + ' คน';
+    const body = document.getElementById('userBody');
+    if (!data.length) {
+      body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👥</div><p>ยังไม่มีผู้ใช้</p></div></td></tr>`;
+      return;
+    }
+    body.innerHTML = data.map(u => {
+      const initial = (u.name||u.email||'?').charAt(0).toUpperCase();
+      const rc = roleClass[u.role] || 'rb-student';
+      const rl = roleLabels[u.role] || u.role;
+      const created = u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString('th-TH') : '–';
+      return `<tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:.75rem">
+            <div class="avatar">${initial}</div>
+            <strong>${u.name||'–'}</strong>
+          </div>
+        </td>
+        <td style="font-size:.85rem;color:var(--gray-600)">${u.email||'–'}</td>
+        <td><span class="role-badge ${rc}">${rl}</span></td>
+        <td>${u.studentCode||'–'}</td>
+        <td style="font-size:.82rem;color:var(--gray-400)">${created}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-secondary btn-sm" onclick="editUser('${u.uid}')">✏️ แก้ไข</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.uid}','${u.name||u.email}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openAddModal() {
+    document.getElementById('editUid').value = '';
+    document.getElementById('modalTitle').textContent = '👤 เพิ่มผู้ใช้ใหม่';
+    document.getElementById('editNote').style.display = 'none';
+    document.getElementById('pwGroup').style.display = '';
+    document.getElementById('fPassword').required = true;
+    ['fName','fEmail','fPassword','fStudentCode'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fRole').value = 'student';
+    toggleStudentCode();
+    openModalEl('userModal');
+  }
+
+  function editUser(uid) {
+    const u = allUsers.find(x => x.uid === uid);
+    if (!u) return;
+    document.getElementById('editUid').value = uid;
+    document.getElementById('modalTitle').textContent = '✏️ แก้ไขผู้ใช้';
+    document.getElementById('editNote').style.display = 'flex';
+    document.getElementById('pwGroup').style.display = 'none';
+    document.getElementById('fPassword').required = false;
+    document.getElementById('fName').value        = u.name||'';
+    document.getElementById('fEmail').value       = u.email||'';
+    document.getElementById('fRole').value        = u.role||'student';
+    document.getElementById('fStudentCode').value = u.studentCode||'';
+    toggleStudentCode();
+    openModalEl('userModal');
+  }
+
+  async function saveUser() {
+    const name    = document.getElementById('fName').value.trim();
+    const email   = document.getElementById('fEmail').value.trim();
+    const role    = document.getElementById('fRole').value;
+    const pw      = document.getElementById('fPassword').value;
+    const code    = document.getElementById('fStudentCode').value.trim();
+    const editUid = document.getElementById('editUid').value;
+
+    if (!name || !email) { alert('กรุณากรอกชื่อและอีเมล'); return; }
+
+    const btn = document.getElementById('btnSave');
+    btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+
+    try {
+      if (editUid) {
+        // อัพเดต Firestore เท่านั้น
+        await db.collection('users').doc(editUid).update({
+          name, role, studentCode: code,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else {
+        // สร้าง user ใหม่ผ่าน Firebase Auth (ต้องใช้ Admin SDK จริงๆ แต่ใช้ secondary auth แทน)
+        if (!pw || pw.length < 6) { alert('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'); btn.disabled=false; btn.textContent='💾 บันทึก'; return; }
+
+        // สร้าง secondary app เพื่อไม่ logout ตัวเอง
+        let secondaryApp;
+        try {
+          secondaryApp = firebase.app('secondary');
+        } catch(e) {
+          secondaryApp = firebase.initializeApp(firebaseConfig, 'secondary');
+        }
+        const secondaryAuth = secondaryApp.auth();
+        const cred = await secondaryAuth.createUserWithEmailAndPassword(email, pw);
+        const uid  = cred.user.uid;
+        await secondaryAuth.signOut();
+
+        // บันทึกใน Firestore
+        await db.collection('users').doc(uid).set({
+          name, email, role, studentCode: code,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      closeModal();
+      loadUsers();
+    } catch(e) {
+      const msgs = {
+        'auth/email-already-in-use': 'อีเมลนี้มีในระบบแล้ว',
+        'auth/invalid-email':        'รูปแบบ Email ไม่ถูกต้อง',
+        'auth/weak-password':        'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
+      };
+      alert(msgs[e.code] || 'เกิดข้อผิดพลาด: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '💾 บันทึก';
+    }
+  }
+
+  async function deleteUser(uid, name) {
+    if (!confirm(`ยืนยันลบบัญชี "${name}"?\n(ลบเฉพาะข้อมูลใน Firestore)`)) return;
+    await db.collection('users').doc(uid).delete();
+    loadUsers();
+  }
+
+  function applyFilters() {
+    const q    = document.getElementById('searchInput').value.toLowerCase();
+    const role = document.getElementById('filterRole').value;
+    let result = allUsers;
+    if (role) result = result.filter(u => u.role === role);
+    if (q)    result = result.filter(u =>
+      (u.name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q)
+    );
+    renderUsers(result);
+  }
+
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('filterRole').addEventListener('change', applyFilters);
+</script>
+</body>
+</html>

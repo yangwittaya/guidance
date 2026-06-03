@@ -7,7 +7,9 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="config.js"></script>
+  <script src="auth.js"></script>
   <style>
     .scholarship-card { background:white; border-radius:var(--radius); border:1px solid var(--gray-200); box-shadow:var(--shadow-sm); padding:1.5rem; transition:all 0.2s; }
     .scholarship-card:hover { box-shadow:var(--shadow); transform:translateY(-2px); }
@@ -42,7 +44,9 @@
       <li><a href="students.html">📋 ทะเบียนนักเรียน</a></li>
       <li><a href="portfolio.html">📁 Portfolio</a></li>
       <li><a href="tracking.html">📊 ติดตามการสมัคร</a></li>
+      <li data-role="admin"><a href="admin.html">⚙️ จัดการผู้ใช้</a></li>
     </ul>
+    <div id="navUserInfo"></div>
   </div>
 </nav>
 
@@ -59,7 +63,7 @@
           <span class="search-icon">🔍</span>
           <input type="text" class="form-control" id="searchInput" placeholder="ค้นหาทุนการศึกษา...">
         </div>
-        <button class="btn btn-primary" id="btnAdd" onclick="openAddModal()">+ เพิ่มทุนใหม่</button>
+        <button class="btn btn-primary" id="btnAdd" data-perm="scholarship.edit" onclick="openAddModal()">+ เพิ่มทุนใหม่</button>
       </div>
     </div>
   </div>
@@ -163,6 +167,9 @@
   function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
   function openModal(id)  { document.getElementById(id).classList.add('active'); }
   function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  // ── AUTH ──
+  initAuth({ requireAuth: true, onReady: () => loadScholarships() });
 
   const typeConfig = {
     'เต็มจำนวน': { color:'#1e40af', bg:'#dbeafe' },
@@ -330,7 +337,7 @@
     loadScholarships();
   }
 
-  loadScholarships();
+  // loadScholarships() ถูกเรียกจาก initAuth onReady แล้ว
 </script>
 </body>
 </html>

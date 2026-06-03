@@ -26,7 +26,8 @@ const CLOUDINARY_UPLOAD_PRESET = "portfolio_upload"; // Unsigned preset ที�
 // =====================================================
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db   = firebase.firestore();
+const auth = firebase.auth();
 
 // ── COLLECTION NAMES ─────────────────────────────────
 const COL = {

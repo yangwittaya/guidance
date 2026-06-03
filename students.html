@@ -7,7 +7,9 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="config.js"></script>
+  <script src="auth.js"></script>
   <style>
     .student-avatar { width:38px; height:38px; border-radius:50%; background:var(--primary-light); color:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; flex-shrink:0; }
     .student-name { font-weight:600; font-size:.9rem; }
@@ -31,7 +33,9 @@
       <li><a href="students.html" class="active">📋 ทะเบียนนักเรียน</a></li>
       <li><a href="portfolio.html">📁 Portfolio</a></li>
       <li><a href="tracking.html">📊 ติดตามการสมัคร</a></li>
+      <li data-role="admin"><a href="admin.html">⚙️ จัดการผู้ใช้</a></li>
     </ul>
+    <div id="navUserInfo"></div>
   </div>
 </nav>
 
@@ -53,7 +57,7 @@
           <option>ม.1</option><option>ม.2</option><option>ม.3</option>
           <option>ม.4</option><option>ม.5</option><option>ม.6</option>
         </select>
-        <button class="btn btn-primary" onclick="openAddModal()">+ เพิ่มนักเรียน</button>
+        <button class="btn btn-primary" data-perm="student.edit" onclick="openAddModal()">+ เพิ่มนักเรียน</button>
       </div>
     </div>
   </div>
@@ -183,6 +187,11 @@
 <script>
   let allStudents = [];
   function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
+  // ── AUTH ──
+  initAuth({ requireAuth: true, onReady: (user, role) => {
+    loadStudents();
+    if (role === 'teacher' || role === 'exec') showReadOnlyBanner();
+  }});
   function openModal(id)  { document.getElementById(id).classList.add('active'); }
   function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
@@ -340,7 +349,7 @@
   document.getElementById('searchInput').addEventListener('input', applyFilters);
   document.getElementById('filterClass').addEventListener('change', applyFilters);
 
-  loadStudents();
+  // loadStudents() ถูกเรียกจาก initAuth onReady แล้ว
 </script>
 </body>
 </html>
