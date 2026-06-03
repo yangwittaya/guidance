@@ -79,6 +79,21 @@ function initAuth(options = {}) {
       if (doc.exists) {
         currentProfile = doc.data();
         currentRole    = currentProfile.role || 'student';
+
+        // ตรวจสอบสถานะการอนุมัติ (ไม่ใช้กับ admin)
+        if (currentRole !== 'admin') {
+          const status = currentProfile.status;
+          if (status === 'pending') {
+            await firebase.auth().signOut();
+            window.location.href = 'login.html?status=pending';
+            return;
+          }
+          if (status === 'suspended') {
+            await firebase.auth().signOut();
+            window.location.href = 'login.html?status=suspended';
+            return;
+          }
+        }
       } else {
         // ถ้าไม่มีใน Firestore ให้เป็น student
         currentRole = 'student';

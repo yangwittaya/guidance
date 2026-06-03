@@ -241,6 +241,11 @@
       </button>
     </form>
 
+    <div class="divider"><span>ยังไม่มีบัญชี?</span></div>
+    <a href="register.html" style="display:block;text-align:center;padding:0.75rem;background:#f0f9ff;border:1.5px solid #bfdbfe;border-radius:10px;color:#1e40af;font-weight:700;text-decoration:none;font-size:0.95rem;">
+      📝 ลงทะเบียนเข้าใช้งาน
+    </a>
+
     <!-- Role hint -->
     <div class="role-hint">
       <div class="role-badge rb-admin">👑 Admin</div>
@@ -252,6 +257,15 @@
 </div>
 
 <script>
+  // แสดงข้อความตาม status ที่ส่งมา
+  const urlParams = new URLSearchParams(window.location.search);
+  const st = urlParams.get('status');
+  if (st === 'pending') {
+    showAlert('danger', '⏳ บัญชีของคุณยังรอ Admin อนุมัติ กรุณารอสักครู่');
+  } else if (st === 'suspended') {
+    showAlert('danger', '🚫 บัญชีของคุณถูกระงับการใช้งาน กรุณาติดต่อ Admin');
+  }
+
   // ตรวจสอบว่า Login อยู่แล้วหรือยัง
   firebase.auth().onAuthStateChanged(user => {
     if (user) window.location.href = 'index.html';

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ลงทะเบียน - งานแนะแนว ยางวิทยาคาร</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="config.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a56a4 0%, #0d3b7a 100%);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .container { width: 100%; max-width: 540px; }
+
+    .logo-wrap { text-align: center; margin-bottom: 1.5rem; color: white; }
+    .logo-icon {
+      width: 70px; height: 70px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem; margin: 0 auto 0.75rem;
+      backdrop-filter: blur(10px);
+    }
+    .logo-title { font-size: 1.4rem; font-weight: 700; }
+    .logo-sub   { font-size: 0.85rem; opacity: 0.8; margin-top: 0.2rem; }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .card h2 { font-size: 1.2rem; font-weight: 700; color: #1f2937; margin-bottom: 0.2rem; }
+    .card > p { font-size: 0.85rem; color: #6b7280; margin-bottom: 1.5rem; }
+
+    /* Role Tabs */
+    .role-tabs {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem; margin-bottom: 1.75rem;
+    }
+    .role-tab {
+      padding: 0.6rem 0.5rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #6b7280;
+      text-align: center;
+      transition: all .2s;
+    }
+    .role-tab:hover { border-color: #1a56a4; color: #1a56a4; }
+    .role-tab.active.teacher { border-color: #1a56a4; background: #dbeafe; color: #1e40af; }
+    .role-tab.active.student { border-color: #059669; background: #d1fae5; color: #065f46; }
+    .role-tab.active.exec    { border-color: #7c3aed; background: #ede9fe; color: #5b21b6; }
+    .role-tab span { display: block; font-size: 1.3rem; margin-bottom: 0.2rem; }
+
+    .form-section { display: none; }
+    .form-section.active { display: block; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { margin-bottom: 1.1rem; }
+    .form-label {
+      display: block; font-size: 0.85rem; font-weight: 600;
+      color: #374151; margin-bottom: 0.35rem;
+    }
+    .form-label .req { color: #ef4444; }
+    .form-control {
+      width: 100%; padding: 0.65rem 1rem;
+      border: 1.5px solid #d1d5db; border-radius: 9px;
+      font-family: inherit; font-size: 0.9rem; color: #1f2937;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .form-control:focus { border-color: #1a56a4; box-shadow: 0 0 0 3px rgba(26,86,164,.1); }
+    select.form-control { background: white; cursor: pointer; }
+
+    .pw-wrap { position: relative; }
+    .pw-wrap .form-control { padding-right: 2.5rem; }
+    .toggle-pw {
+      position: absolute; right: 0.75rem; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; font-size: 1rem; color: #9ca3af;
+    }
+
+    .pw-hint { font-size: 0.75rem; color: #9ca3af; margin-top: 0.3rem; }
+
+    .btn-submit {
+      width: 100%; padding: 0.85rem;
+      background: linear-gradient(135deg, #1a56a4, #0d3b7a);
+      color: white; border: none; border-radius: 10px;
+      font-family: inherit; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: all .2s; margin-top: 0.5rem;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,86,164,.4); }
+    .btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    .alert {
+      padding: 0.875rem 1rem; border-radius: 8px;
+      font-size: 0.875rem; margin-bottom: 1.25rem;
+      display: flex; align-items: flex-start; gap: 0.5rem;
+    }
+    .alert-danger  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .alert-success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+
+    .divider { text-align: center; margin: 1.25rem 0; position: relative; }
+    .divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e5e7eb; }
+    .divider span { background: white; padding: 0 0.75rem; font-size: 0.8rem; color: #9ca3af; position: relative; }
+
+    .back-link {
+      display: block; text-align: center; font-size: 0.875rem;
+      color: #1a56a4; text-decoration: none; margin-top: 1.25rem;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    /* Success State */
+    .success-state { text-align: center; padding: 1rem 0; }
+    .success-icon { font-size: 4rem; margin-bottom: 1rem; }
+    .success-state h3 { font-size: 1.3rem; color: #065f46; margin-bottom: 0.5rem; }
+    .success-state p { color: #6b7280; font-size: 0.9rem; line-height: 1.6; }
+
+    .note-box {
+      background: #fffbeb; border: 1px solid #fcd34d;
+      border-radius: 8px; padding: 0.75rem 1rem;
+      font-size: 0.82rem; color: #92400e; margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="logo-wrap">
+    <div class="logo-icon">🎓</div>
+    <div class="logo-title">งานแนะแนว</div>
+    <div class="logo-sub">โรงเรียนยางวิทยาคาร อ.ศรีขรภูมิ จ.สุรินทร์</div>
+  </div>
+
+  <div class="card">
+    <div id="formArea">
+      <h2>📝 ลงทะเบียนเข้าใช้งาน</h2>
+      <p>กรุณาเลือกประเภทผู้ใช้และกรอกข้อมูลให้ครบถ้วน</p>
+
+      <div id="alertBox" style="display:none"></div>
+
+      <!-- Role Tabs -->
+      <div class="role-tabs">
+        <button class="role-tab teacher" onclick="switchRole('teacher')">
+          <span>👨‍🏫</span>ครู
+        </button>
+        <button class="role-tab student" onclick="switchRole('student')">
+          <span>👨‍🎓</span>นักเรียน
+        </button>
+        <button class="role-tab exec" onclick="switchRole('exec')">
+          <span>🏫</span>ผู้บริหาร
+        </button>
+      </div>
+
+      <!-- ===== TEACHER FORM ===== -->
+      <div class="form-section active" id="sec-teacher">
+        <div class="note-box">📌 ครูใช้ <strong>อีเมล + รหัสผ่าน</strong> ในการเข้าสู่ระบบ</div>
+        <form onsubmit="doRegister(event,'teacher')">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">ชื่อ <span class="req">*</span></label>
+              <input class="form-control" id="t-fname" type="text" placeholder="ชื่อ" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">นามสกุล <span class="req">*</span></label>
+              <input class="form-control" id="t-lname" type="text" placeholder="นามสกุล" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ตำแหน่ง <span class="req">*</span></label>
+            <select class="form-control" id="t-position" required>
+              <option value="">-- เลือกตำแหน่ง --</option>
+              <option>ครูผู้สอน</option>
+              <option>ครูแนะแนว</option>
+              <option>ครูประจำชั้น</option>
+              <option>ครูพิเศษ</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ประจำชั้น</label>
+            <input class="form-control" id="t-homeroom" type="text" placeholder="เช่น ม.4/1 (ถ้าไม่มีให้เว้นว่าง)">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">เบอร์โทร <span class="req">*</span></label>
+              <input class="form-control" id="t-phone" type="tel" placeholder="0812345678" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ID LINE</label>
+              <input class="form-control" id="t-line" type="text" placeholder="LINE ID">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">อีเมล <span class="req">*</span></label>
+            <input class="form-control" id="t-email" type="email" placeholder="teacher@school.ac.th" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">รหัสผ่าน <span class="req">*</span></label>
+            <div class="pw-wrap">
+              <input class="form-control" id="t-pw" type="password" placeholder="อย่างน้อย 6 ตัวอักษร" required minlength="6">
+              <button type="button" class="toggle-pw" onclick="togglePw('t-pw')">👁️</button>
+            </div>
+            <div class="pw-hint">⚠️ จำรหัสผ่านนี้ไว้ใช้ Login ในภายหลัง</div>
+          </div>
+          <button type="submit" class="btn-submit" id="btn-teacher">📤 ส่งคำขอลงทะเบียน</button>
+        </form>
+      </div>
+
+      <!-- ===== STUDENT FORM ===== -->
+      <div class="form-section" id="sec-student">
+        <div class="note-box">📌 นักเรียนใช้ <strong>เลขประจำตัวนักเรียน + รหัสผ่าน</strong> ในการเข้าสู่ระบบ</div>
+        <form onsubmit="doRegister(event,'student')">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">ชื่อ <span class="req">*</span></label>
+              <input class="form-control" id="s-fname" type="text" placeholder="ชื่อ" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">นามสกุล <span class="req">*</span></label>
+              <input class="form-control" id="s-lname" type="text" placeholder="นามสกุล" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">ระดับชั้น <span class="req">*</span></label>
+              <select class="form-control" id="s-class" required>
+                <option value="">-- เลือกชั้น --</option>
+                <optgroup label="มัธยมศึกษาตอนต้น">
+                  <option>ม.1/1</option><option>ม.1/2</option><option>ม.1/3</option><option>ม.1/4</option><option>ม.1/5</option>
+                  <option>ม.2/1</option><option>ม.2/2</option><option>ม.2/3</option><option>ม.2/4</option><option>ม.2/5</option>
+                  <option>ม.3/1</option><option>ม.3/2</option><option>ม.3/3</option><option>ม.3/4</option><option>ม.3/5</option>
+                </optgroup>
+                <optgroup label="มัธยมศึกษาตอนปลาย">
+                  <option>ม.4/1</option><option>ม.4/2</option><option>ม.4/3</option><option>ม.4/4</option><option>ม.4/5</option>
+                  <option>ม.5/1</option><option>ม.5/2</option><option>ม.5/3</option><option>ม.5/4</option><option>ม.5/5</option>
+                  <option>ม.6/1</option><option>ม.6/2</option><option>ม.6/3</option><option>ม.6/4</option><option>ม.6/5</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">เลขประจำตัวนักเรียน <span class="req">*</span></label>
+              <input class="form-control" id="s-sid" type="text" placeholder="เช่น 67001" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">เบอร์โทร <span class="req">*</span></label>
+              <input class="form-control" id="s-phone" type="tel" placeholder="0812345678" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ID LINE</label>
+              <input class="form-control" id="s-line" type="text" placeholder="LINE ID">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">รหัสผ่าน <span class="req">*</span></label>
+            <div class="pw-wrap">
+              <input class="form-control" id="s-pw" type="password" placeholder="อย่างน้อย 6 ตัวอักษร" required minlength="6">
+              <button type="button" class="toggle-pw" onclick="togglePw('s-pw')">👁️</button>
+            </div>
+            <div class="pw-hint">⚠️ จำรหัสผ่านนี้ไว้ใช้ Login ด้วยเลขประจำตัว + รหัสผ่านนี้</div>
+          </div>
+          <button type="submit" class="btn-submit" id="btn-student">📤 ส่งคำขอลงทะเบียน</button>
+        </form>
+      </div>
+
+      <!-- ===== EXEC FORM ===== -->
+      <div class="form-section" id="sec-exec">
+        <div class="note-box">📌 ผู้บริหารใช้ <strong>อีเมล + รหัสผ่าน</strong> ในการเข้าสู่ระบบ</div>
+        <form onsubmit="doRegister(event,'exec')">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">ชื่อ <span class="req">*</span></label>
+              <input class="form-control" id="e-fname" type="text" placeholder="ชื่อ" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">นามสกุล <span class="req">*</span></label>
+              <input class="form-control" id="e-lname" type="text" placeholder="นามสกุล" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ตำแหน่ง <span class="req">*</span></label>
+            <select class="form-control" id="e-position" required>
+              <option value="">-- เลือกตำแหน่ง --</option>
+              <option>ผู้อำนวยการ</option>
+              <option>รองผู้อำนวยการฝ่ายวิชาการ</option>
+              <option>รองผู้อำนวยการฝ่ายบริหาร</option>
+              <option>รองผู้อำนวยการฝ่ายกิจการนักเรียน</option>
+              <option>รองผู้อำนวยการฝ่ายแผนงาน</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">เบอร์โทร <span class="req">*</span></label>
+              <input class="form-control" id="e-phone" type="tel" placeholder="0812345678" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ID LINE</label>
+              <input class="form-control" id="e-line" type="text" placeholder="LINE ID">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">อีเมล <span class="req">*</span></label>
+            <input class="form-control" id="e-email" type="email" placeholder="exec@school.ac.th" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">รหัสผ่าน <span class="req">*</span></label>
+            <div class="pw-wrap">
+              <input class="form-control" id="e-pw" type="password" placeholder="อย่างน้อย 6 ตัวอักษร" required minlength="6">
+              <button type="button" class="toggle-pw" onclick="togglePw('e-pw')">👁️</button>
+            </div>
+            <div class="pw-hint">⚠️ จำรหัสผ่านนี้ไว้ใช้ Login ในภายหลัง</div>
+          </div>
+          <button type="submit" class="btn-submit" id="btn-exec">📤 ส่งคำขอลงทะเบียน</button>
+        </form>
+      </div>
+
+      <a href="login.html" class="back-link">← กลับหน้าเข้าสู่ระบบ</a>
+    </div>
+
+    <!-- Success State -->
+    <div id="successArea" style="display:none">
+      <div class="success-state">
+        <div class="success-icon">✅</div>
+        <h3>ส่งคำขอเรียบร้อยแล้ว!</h3>
+        <p>ระบบได้รับคำขอลงทะเบียนของคุณแล้ว<br>
+        กรุณารอ Admin ตรวจสอบและอนุมัติ<br><br>
+        เมื่อได้รับการอนุมัติแล้วจะแจ้งผ่านช่องทางที่ระบุไว้<br>
+        จากนั้นจึงสามารถเข้าสู่ระบบได้</p>
+        <br>
+        <a href="login.html" class="btn-submit" style="text-decoration:none;display:inline-flex;width:auto;padding:0.75rem 2rem">
+          🔐 ไปหน้าเข้าสู่ระบบ
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ======= EmailJS Config =======
+  // ** ต้องตั้งค่าก่อนใช้งาน — ดูคำแนะนำใน SETUP.md **
+  const EMAILJS_PUBLIC_KEY  = 'l0djl3fOIHx-YzZk-';
+  const EMAILJS_SERVICE_ID  = 'service_92brxe3';
+  const EMAILJS_TEMPLATE_ID = 'nv6cm5h';
+  const ADMIN_EMAIL         = 'udensak55557@gmail.com';    // อีเมล Admin
+
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+
+  // ======= Role Switch =======
+  let currentRole = 'teacher';
+  function switchRole(role) {
+    currentRole = role;
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+    event.target.closest('.role-tab').classList.add('active');
+    document.getElementById('sec-' + role).classList.add('active');
+    document.getElementById('alertBox').style.display = 'none';
+  }
+
+  // Init first tab
+  document.querySelectorAll('.role-tab')[0].classList.add('active');
+
+  // ======= Toggle Password =======
+  function togglePw(id) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+
+  // ======= Show Alert =======
+  function showAlert(type, msg) {
+    const box = document.getElementById('alertBox');
+    box.style.display = 'flex';
+    box.className = 'alert alert-' + type;
+    box.innerHTML = `<span>${type==='danger'?'⚠️':'✅'}</span><div>${msg}</div>`;
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // ======= Register =======
+  async function doRegister(e, role) {
+    e.preventDefault();
+    document.getElementById('alertBox').style.display = 'none';
+
+    let data = { role, status: 'pending', createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+    let email, password, displayName;
+
+    if (role === 'teacher') {
+      const fname    = document.getElementById('t-fname').value.trim();
+      const lname    = document.getElementById('t-lname').value.trim();
+      email          = document.getElementById('t-email').value.trim();
+      password       = document.getElementById('t-pw').value;
+      displayName    = fname + ' ' + lname;
+      Object.assign(data, {
+        fname, lname, displayName,
+        position : document.getElementById('t-position').value,
+        homeroom : document.getElementById('t-homeroom').value.trim(),
+        phone    : document.getElementById('t-phone').value.trim(),
+        lineId   : document.getElementById('t-line').value.trim(),
+        email,
+        loginEmail: email
+      });
+    } else if (role === 'student') {
+      const fname = document.getElementById('s-fname').value.trim();
+      const lname = document.getElementById('s-lname').value.trim();
+      const sid   = document.getElementById('s-sid').value.trim();
+      password    = document.getElementById('s-pw').value;
+      displayName = fname + ' ' + lname;
+      // สร้าง fake email จาก student ID
+      email       = sid + '@student.yangwittaya.ac.th';
+      Object.assign(data, {
+        fname, lname, displayName,
+        studentId : sid,
+        classroom : document.getElementById('s-class').value,
+        phone     : document.getElementById('s-phone').value.trim(),
+        lineId    : document.getElementById('s-line').value.trim(),
+        email,
+        loginEmail: email
+      });
+    } else {
+      const fname = document.getElementById('e-fname').value.trim();
+      const lname = document.getElementById('e-lname').value.trim();
+      email       = document.getElementById('e-email').value.trim();
+      password    = document.getElementById('e-pw').value;
+      displayName = fname + ' ' + lname;
+      Object.assign(data, {
+        fname, lname, displayName,
+        position : document.getElementById('e-position').value,
+        phone    : document.getElementById('e-phone').value.trim(),
+        lineId   : document.getElementById('e-line').value.trim(),
+        email,
+        loginEmail: email
+      });
+    }
+
+    const btnId = 'btn-' + role;
+    const btn   = document.getElementById(btnId);
+    btn.disabled = true;
+    btn.innerHTML = '⏳ กำลังส่งคำขอ...';
+
+    try {
+      // 1. สร้าง Firebase Auth (disabled ไม่ให้ login จนกว่า admin จะ approve)
+      const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
+      const uid  = cred.user.uid;
+
+      // อัปเดต displayName
+      await cred.user.updateProfile({ displayName });
+
+      // Disable user ทันที (ป้องกัน login ก่อน approve)
+      // Note: disable ผ่าน client ไม่ได้ จึงเก็บ status=pending แล้วตรวจสอบใน auth.js
+
+      // 2. บันทึกข้อมูลใน Firestore collection 'registrations'
+      data.uid = uid;
+      // เก็บรหัสผ่าน (hashed ไม่ได้ แต่เก็บ placeholder ไว้ admin reset ได้)
+      // *** สำคัญ: เก็บ plain text เฉพาะ registrations เพื่อให้ admin ดูได้ ***
+      data.passwordPlain = password;
+      await db.collection('registrations').doc(uid).set(data);
+
+      // 3. บันทึกใน users collection ด้วย status=pending
+      await db.collection('users').doc(uid).set({
+        ...data,
+        approved: false
+      });
+
+      // 4. Sign out ทันที (ยังไม่ให้ login)
+      await firebase.auth().signOut();
+
+      // 5. ส่ง email แจ้ง Admin
+      await sendAdminEmail(data);
+
+      // 6. แสดงหน้า success
+      document.getElementById('formArea').style.display = 'none';
+      document.getElementById('successArea').style.display = 'block';
+
+    } catch(err) {
+      btn.disabled = false;
+      btn.innerHTML = '📤 ส่งคำขอลงทะเบียน';
+      const msgs = {
+        'auth/email-already-in-use': 'อีเมลหรือเลขประจำตัวนี้มีในระบบแล้ว กรุณาตรวจสอบ',
+        'auth/weak-password': 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
+        'auth/invalid-email': 'รูปแบบอีเมลไม่ถูกต้อง',
+      };
+      showAlert('danger', msgs[err.code] || 'เกิดข้อผิดพลาด: ' + err.message);
+    }
+  }
+
+  // ======= Send Email to Admin =======
+  async function sendAdminEmail(data) {
+    if (EMAILJS_PUBLIC_KEY === 'YOUR_EMAILJS_PUBLIC_KEY') return; // ยังไม่ได้ตั้งค่า
+
+    const roleLabel = { teacher: 'ครู', student: 'นักเรียน', exec: 'ผู้บริหาร' };
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email    : ADMIN_EMAIL,
+        to_name     : 'Admin',
+        from_name   : data.displayName,
+        user_role   : roleLabel[data.role] || data.role,
+        user_email  : data.email,
+        user_phone  : data.phone || '-',
+        user_detail : data.role === 'student'
+                        ? `ชั้น ${data.classroom} เลขที่ ${data.studentId}`
+                        : `ตำแหน่ง ${data.position || '-'}`,
+        admin_url   : window.location.origin + '/admin.html',
+        reply_to    : ADMIN_EMAIL
+      });
+    } catch(err) {
+      console.warn('EmailJS error:', err);
+      // ไม่ block การลงทะเบียน ถ้า email ส่งไม่ได้
+    }
+  }
+</script>
+</body>
+</html>
