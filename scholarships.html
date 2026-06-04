@@ -192,7 +192,6 @@
     const grid = document.getElementById('scholarshipGrid');
     try {
       let data = await getData(COL.SCHOLARSHIPS);
-      if (!data.length) data = getDemoData();
       allScholarships = data;
       window._scholarships = data;
       renderScholarships(allScholarships);
