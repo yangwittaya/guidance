@@ -195,6 +195,28 @@
     loadStudents();
     if (role === 'teacher' || role === 'exec') showReadOnlyBanner();
   }});
+
+  // ── Export Button ──
+  const HDR_STD = ['#','เลขประจำตัว','ชื่อ-นามสกุล','เพศ','ชั้น/ห้อง','แผนการเรียน','GPA','เบอร์โทร','ผู้ปกครอง','เบอร์ผู้ปกครอง'];
+  function getStudentRows() {
+    return allStudents.map((s, i) => [
+      i+1,
+      s.studentCode||'-',
+      s.fullname||'-',
+      s.gender||'-',
+      (s.level||'') + '/' + (s.room||''),
+      s.plan||'-',
+      s.gpa||'-',
+      s.phone||'-',
+      s.parent||'-',
+      s.parentPhone||'-',
+    ]);
+  }
+  createExportButton('exportBtnStudents', {
+    excel: () => { exportExcel(HDR_STD, getStudentRows(), 'ทะเบียนนักเรียน', 'ทะเบียนนักเรียน'); exportToast('📊 ดาวน์โหลด Excel แล้ว'); },
+    pdf:   () => exportPDF('ทะเบียนนักเรียน', HDR_STD, getStudentRows(), ['4%','9%','22%','7%','9%','13%','7%','11%','11%','7%']),
+    word:  () => { exportWord('ทะเบียนนักเรียน', HDR_STD, getStudentRows()); exportToast('📝 ดาวน์โหลด Word แล้ว'); }
+  });
   function openModal(id)  { document.getElementById(id).classList.add('active'); }
   function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
