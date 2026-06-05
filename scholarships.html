@@ -128,6 +128,15 @@
           <input type="date" class="form-control" id="fClose">
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ปีการศึกษา</label>
+          <select class="form-control" id="fYear">
+            <option value="">-- ไม่ระบุ --</option>
+          </select>
+        </div>
+        <div class="form-group"><!-- spacer --></div>
+      </div>
       <div class="form-group">
         <label class="form-label">คุณสมบัติ</label>
         <textarea class="form-control" id="fQual" placeholder="เงื่อนไข คุณสมบัติผู้สมัคร..."></textarea>
@@ -168,6 +177,17 @@
   window._scholarships = [];
   let allScholarships = [];
   let currentFilter  = 'all';
+
+  // สร้างตัวเลือกปีการศึกษา 2569-2600
+  (function buildYearOptions() {
+    const sel = document.getElementById('fYear');
+    for (let y = 2569; y <= 2600; y++) {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      sel.appendChild(opt);
+    }
+    sel.value = 2569; // default
+  })();
 
   function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
   function openModal(id)  { document.getElementById(id).classList.add('active'); }
@@ -231,6 +251,7 @@
             <div class="scholarship-amount" style="margin-top:.25rem">${s.amount||'–'}</div>
           </div>
         </div>
+        ${s.academicYear ? `<div class="scholarship-detail">📅 ปีการศึกษา ${s.academicYear}</div>` : ''}
         ${s.qualifications ? `<div class="scholarship-detail">📌 ${s.qualifications.substring(0,80)}${s.qualifications.length>80?'...':''}</div>` : ''}
         ${deadline}
         <div class="scholarship-actions">
@@ -277,6 +298,7 @@
     ['fName','fAmount','fOpen','fClose','fQual','fDocs','fLink'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('fType').value   = 'เต็มจำนวน';
     document.getElementById('fStatus').value = 'เปิดรับ';
+    document.getElementById('fYear').value   = 2569;
     openModal('addModal');
   }
 
@@ -288,6 +310,7 @@
       <div style="display:grid;gap:.75rem;font-size:.9rem">
         <div class="form-row"><div><strong>ประเภท:</strong> ${s.type}</div><div><strong>สถานะ:</strong> ${statusHtml[s.status]||s.status}</div></div>
         <div><strong>💰 จำนวนเงิน:</strong> ${s.amount||'–'}</div>
+        <div><strong>📅 ปีการศึกษา:</strong> ${s.academicYear||'–'}</div>
         <div><strong>📅 ช่วงรับสมัคร:</strong> ${s.openDate||'–'} – ${s.closeDate||'–'}</div>
         <div><strong>📌 คุณสมบัติ:</strong><br><span style="color:var(--gray-600)">${(s.qualifications||'–').replace(/\n/g,'<br>')}</span></div>
         <div><strong>📄 เอกสาร:</strong><br><span style="color:var(--gray-600)">${(s.documents||'–').replace(/\n/g,'<br>')}</span></div>
@@ -307,6 +330,7 @@
     document.getElementById('fStatus').value  = s.status||'เปิดรับ';
     document.getElementById('fOpen').value    = s.openDate||'';
     document.getElementById('fClose').value   = s.closeDate||'';
+    document.getElementById('fYear').value    = s.academicYear||2569;
     document.getElementById('fQual').value    = s.qualifications||'';
     document.getElementById('fDocs').value    = s.documents||'';
     document.getElementById('fLink').value    = s.applyChannel||'';
@@ -323,6 +347,7 @@
       status:        document.getElementById('fStatus').value,
       openDate:      document.getElementById('fOpen').value,
       closeDate:     document.getElementById('fClose').value,
+      academicYear:  document.getElementById('fYear').value,
       qualifications:document.getElementById('fQual').value,
       documents:     document.getElementById('fDocs').value,
       applyChannel:  document.getElementById('fLink').value,

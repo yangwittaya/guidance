@@ -19,6 +19,12 @@
     .gpa-bar { display:flex; align-items:center; gap:.5rem; }
     .gpa-track { height:6px; background:var(--gray-200); border-radius:3px; flex:1; overflow:hidden; }
     .gpa-fill { height:100%; border-radius:3px; }
+    .reg-filter-bar { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center; }
+    .reg-btn { padding:.35rem .9rem; border-radius:50px; border:1.5px solid var(--gray-300); background:white; font-size:.82rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all .2s; color:var(--gray-600); }
+    .reg-btn:hover { border-color:var(--primary); color:var(--primary); }
+    .reg-btn.active { background:var(--primary); color:white; border-color:var(--primary); }
+    .badge-reg-yes { background:#d1fae5; color:#065f46; }
+    .badge-reg-no  { background:#fee2e2; color:#991b1b; }
   </style>
 </head>
 <body>
@@ -66,6 +72,15 @@
     </div>
   </div>
 
+  <!-- ตัวกรองสถานะลงทะเบียน (แสดงเฉพาะ admin/teacher/exec) -->
+  <div class="reg-filter-bar" id="regFilterBar" style="display:none">
+    <span style="font-size:.85rem;color:var(--gray-600);font-weight:600">สถานะลงทะเบียน:</span>
+    <button class="reg-btn active" onclick="setRegFilter('all',this)">ทั้งหมด</button>
+    <button class="reg-btn" onclick="setRegFilter('yes',this)">✅ ลงทะเบียนแล้ว</button>
+    <button class="reg-btn" onclick="setRegFilter('no',this)">❌ ยังไม่ลงทะเบียน</button>
+    <span id="regSummary" style="font-size:.8rem;color:var(--gray-400);margin-left:.5rem"></span>
+  </div>
+
   <div class="card">
     <div class="card-header">
       <h2>👨‍🎓 รายชื่อนักเรียน</h2>
@@ -76,7 +91,9 @@
         <thead>
           <tr>
             <th>นักเรียน</th><th>ชั้น/ห้อง</th><th>แผนการเรียน</th>
-            <th>GPA</th><th>เบอร์โทร</th><th>ผู้ปกครอง</th><th>จัดการ</th>
+            <th>GPA</th><th>เบอร์โทร</th><th>ผู้ปกครอง</th>
+            <th id="regColHeader" style="display:none">ลงทะเบียน</th>
+            <th>จัดการ</th>
           </tr>
         </thead>
         <tbody id="studentBody">
@@ -190,11 +207,16 @@
 
 <script>
   let allStudents = [];
+  let currentDisplayed = []; // รายการที่แสดงอยู่ตอนนี้ (ใช้สำหรับ export)
+  let registeredCodes = new Set(); // เลขประจำตัวที่ลงทะเบียนแล้ว
+  let regFilter = 'all'; // 'all' | 'yes' | 'no'
+  let showRegCol = false; // แสดงคอลัมน์ลงทะเบียนหรือไม่
+
   function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
   // ── AUTH ──
   let currentStudentCode = null; // เก็บเลขประจำตัวของนักเรียนที่ login
 
-  initAuth({ requireAuth: true, onReady: (user, role) => {
+  initAuth({ requireAuth: true, onReady: async (user, role) => {
     if (role === 'student') {
       // ดึงเลขประจำตัวจาก email: 02087@student.yangwittaya.ac.th → 02087
       currentStudentCode = (user.email || '').split('@')[0];
@@ -204,31 +226,104 @@
       if (addBtn) addBtn.style.display = 'none';
       document.getElementById('exportBtnStudents').style.display = 'none';
     } else {
+      // โหลด registered users ควบคู่กัน (admin เท่านั้นที่มีสิทธิ์อ่าน users collection)
+      await loadRegisteredUsers();
+      if (showRegCol) {
+        document.getElementById('regFilterBar').style.display = 'flex';
+        document.getElementById('regColHeader').style.display = '';
+      }
       loadStudents();
       if (role === 'teacher' || role === 'exec') showReadOnlyBanner();
     }
   }});
 
-  // ── Export Button ──
-  const HDR_STD = ['#','เลขประจำตัว','ชื่อ-นามสกุล','เพศ','ชั้น/ห้อง','แผนการเรียน','GPA','เบอร์โทร','ผู้ปกครอง','เบอร์ผู้ปกครอง'];
-  function getStudentRows() {
-    return allStudents.map((s, i) => [
-      i+1,
-      s.studentCode||'-',
-      s.fullname||'-',
-      s.gender||'-',
-      (s.level||'') + '/' + (s.room||''),
-      s.plan||'-',
-      s.gpa||'-',
-      s.phone||'-',
-      s.parent||'-',
-      s.parentPhone||'-',
-    ]);
+  // โหลดรายชื่อที่ลงทะเบียนแล้วจาก users collection
+  async function loadRegisteredUsers() {
+    try {
+      const snap = await db.collection('users').get();
+      snap.docs.forEach(d => {
+        const email = d.data().email || '';
+        if (email.includes('@student.yangwittaya.ac.th')) {
+          registeredCodes.add(email.split('@')[0].trim());
+        }
+      });
+      showRegCol = true;
+      // อัปเดตสรุป
+      updateRegSummary();
+    } catch(e) {
+      // ไม่มีสิทธิ์อ่าน users → ซ่อนคอลัมน์
+      showRegCol = false;
+    }
   }
+
+  function updateRegSummary() {
+    const el = document.getElementById('regSummary');
+    if (!el || !showRegCol) return;
+    const total = allStudents.length;
+    const regCount = allStudents.filter(s => registeredCodes.has(String(s.studentCode).trim())).length;
+    el.textContent = `ลงทะเบียนแล้ว ${regCount} / ${total} คน`;
+  }
+
+  function setRegFilter(type, btn) {
+    regFilter = type;
+    document.querySelectorAll('.reg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters();
+  }
+
+  // ── Export Button ──
+  function getExportTitle() {
+    const cls = document.getElementById('filterClass').value;
+    const regLbl = regFilter === 'yes' ? ' (ลงทะเบียนแล้ว)' : regFilter === 'no' ? ' (ยังไม่ลงทะเบียน)' : '';
+    return 'ทะเบียนนักเรียน' + (cls ? ' ' + cls : '') + regLbl;
+  }
+  function getStudentRows() {
+    // ใช้ currentDisplayed เพื่อให้ export ตรงกับที่กรองอยู่
+    const list = currentDisplayed.length ? currentDisplayed : allStudents;
+    if (showRegCol) {
+      const HDR = ['#','เลขประจำตัว','ชื่อ-นามสกุล','เพศ','ชั้น/ห้อง','แผนการเรียน','GPA','เบอร์โทร','ผู้ปกครอง','เบอร์ผู้ปกครอง','ลงทะเบียน'];
+      return [HDR, ...list.map((s, i) => [
+        i+1, s.studentCode||'-', s.fullname||'-', s.gender||'-',
+        (s.level||'') + '/' + (s.room||''), s.plan||'-', s.gpa||'-',
+        s.phone||'-', s.parent||'-', s.parentPhone||'-',
+        registeredCodes.has(String(s.studentCode).trim()) ? 'ลงทะเบียนแล้ว' : 'ยังไม่ลงทะเบียน'
+      ])];
+    } else {
+      return list.map((s, i) => [
+        i+1, s.studentCode||'-', s.fullname||'-', s.gender||'-',
+        (s.level||'') + '/' + (s.room||''), s.plan||'-', s.gpa||'-',
+        s.phone||'-', s.parent||'-', s.parentPhone||'-',
+      ]);
+    }
+  }
+  const HDR_STD = ['#','เลขประจำตัว','ชื่อ-นามสกุล','เพศ','ชั้น/ห้อง','แผนการเรียน','GPA','เบอร์โทร','ผู้ปกครอง','เบอร์ผู้ปกครอง'];
   createExportButton('exportBtnStudents', {
-    excel: () => { exportExcel(HDR_STD, getStudentRows(), 'ทะเบียนนักเรียน', 'ทะเบียนนักเรียน'); exportToast('📊 ดาวน์โหลด Excel แล้ว'); },
-    pdf:   () => exportPDF('ทะเบียนนักเรียน', HDR_STD, getStudentRows(), ['4%','9%','22%','7%','9%','13%','7%','11%','11%','7%']),
-    word:  () => { exportWord('ทะเบียนนักเรียน', HDR_STD, getStudentRows()); exportToast('📝 ดาวน์โหลด Word แล้ว'); }
+    excel: () => {
+      const rows = getStudentRows();
+      const hasHdr = showRegCol;
+      const hdr = hasHdr ? rows[0] : HDR_STD;
+      const data = hasHdr ? rows.slice(1) : rows;
+      exportExcel(hdr, data, 'ทะเบียนนักเรียน', getExportTitle());
+      exportToast('📊 ดาวน์โหลด Excel แล้ว');
+    },
+    pdf: () => {
+      const rows = getStudentRows();
+      const hasHdr = showRegCol;
+      const hdr = hasHdr ? rows[0] : HDR_STD;
+      const data = hasHdr ? rows.slice(1) : rows;
+      const widths = hasHdr
+        ? ['4%','8%','20%','6%','8%','11%','6%','9%','9%','6%','13%']
+        : ['4%','9%','22%','7%','9%','13%','7%','11%','11%','7%'];
+      exportPDF(getExportTitle(), hdr, data, widths);
+    },
+    word: () => {
+      const rows = getStudentRows();
+      const hasHdr = showRegCol;
+      const hdr = hasHdr ? rows[0] : HDR_STD;
+      const data = hasHdr ? rows.slice(1) : rows;
+      exportWord(getExportTitle(), hdr, data);
+      exportToast('📝 ดาวน์โหลด Word แล้ว');
+    }
   });
   function openModal(id)  { document.getElementById(id).classList.add('active'); }
   function closeModal(id) { document.getElementById(id).classList.remove('active'); }
@@ -286,16 +381,22 @@
   }
 
   function renderStudents(data) {
+    currentDisplayed = data; // เก็บรายการที่แสดงอยู่เพื่อใช้กับ export
     document.getElementById('totalCount').textContent = data.length + ' คน';
     const body = document.getElementById('studentBody');
+    const colspan = showRegCol ? 8 : 7;
     if (!data.length) {
-      body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👨‍🎓</div><p>ยังไม่มีข้อมูลนักเรียน</p></div></td></tr>`;
+      body.innerHTML = `<tr><td colspan="${colspan}"><div class="empty-state"><div class="empty-icon">👨‍🎓</div><p>ยังไม่มีข้อมูลนักเรียน</p></div></td></tr>`;
       return;
     }
     body.innerHTML = data.map(s => {
       const initial = (s.fullname||'?').replace(/^(นาย|นางสาว|นาง)\s*/,'').charAt(0);
       const gpa = parseFloat(s.gpa) || 0;
       const gpaColor = gpa>=3.5?'#10b981':gpa>=3.0?'#3b82f6':gpa>=2.0?'#f59e0b':'#ef4444';
+      const isReg = registeredCodes.has(String(s.studentCode).trim());
+      const regBadge = showRegCol
+        ? `<td><span class="badge ${isReg?'badge-reg-yes':'badge-reg-no'}">${isReg?'✅ ลงทะเบียน':'❌ ยังไม่'}</span></td>`
+        : '';
       return `<tr>
         <td>
           <div style="display:flex;align-items:center;gap:.75rem">
@@ -313,6 +414,7 @@
         </td>
         <td>${s.phone||'–'}</td>
         <td>${s.parent||'–'}</td>
+        ${regBadge}
         <td style="white-space:nowrap">
           <button class="btn btn-secondary btn-sm" onclick="viewStudent('${s.id}')">👁️</button>
           <button class="btn btn-secondary btn-sm" onclick="editStudent('${s.id}')">✏️</button>
@@ -320,6 +422,7 @@
         </td>
       </tr>`;
     }).join('');
+    updateRegSummary();
   }
 
   function viewStudent(id) {
@@ -402,8 +505,13 @@
     const q   = document.getElementById('searchInput').value.toLowerCase();
     const cls = document.getElementById('filterClass').value;
     let result = allStudents;
-    if (cls) result = result.filter(s => s.level === cls);
-    if (q)   result = result.filter(s => Object.values(s).some(v => String(v).toLowerCase().includes(q)));
+    // กรองตามชั้น (สำคัญ: ใช้ level ที่เก็บในรูปแบบ "ม.1" ตรงกับ filterClass)
+    if (cls) result = result.filter(s => (s.level||'').trim() === cls.trim());
+    // กรองตามสถานะลงทะเบียน
+    if (regFilter === 'yes') result = result.filter(s => registeredCodes.has(String(s.studentCode).trim()));
+    if (regFilter === 'no')  result = result.filter(s => !registeredCodes.has(String(s.studentCode).trim()));
+    // กรองตามคำค้น
+    if (q) result = result.filter(s => Object.values(s).some(v => String(v).toLowerCase().includes(q)));
     renderStudents(result);
   }
   document.getElementById('searchInput').addEventListener('input', applyFilters);
