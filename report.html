@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>รายงานสรุป - งานแนะแนว ยางวิทยาคาร</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="export.js"></script>
+  <style>
+    .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem; }
+    .summary-card { background:white; border-radius:12px; padding:1.25rem; box-shadow:0 1px 4px rgba(0,0,0,.08); text-align:center; }
+    .summary-num  { font-size:2rem; font-weight:700; color:#1a56a4; }
+    .summary-label{ font-size:.8rem; color:#6b7280; margin-top:.25rem; }
+    .summary-sub  { font-size:.72rem; color:#9ca3af; margin-top:.15rem; }
+    .tab-bar { display:flex; gap:.5rem; margin-bottom:1.5rem; border-bottom:2px solid #e5e7eb; }
+    .tab-btn { padding:.65rem 1.25rem; background:none; border:none; border-bottom:3px solid transparent; margin-bottom:-2px; cursor:pointer; font-family:inherit; font-size:.9rem; font-weight:600; color:#6b7280; transition:all .15s; }
+    .tab-btn.active { color:#1a56a4; border-bottom-color:#1a56a4; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+    .progress-row { display:flex; align-items:center; gap:.75rem; margin-bottom:.75rem; }
+    .progress-label { width:80px; font-size:.85rem; font-weight:600; color:#374151; flex-shrink:0; }
+    .progress-bar-wrap { flex:1; background:#e5e7eb; border-radius:50px; height:10px; overflow:hidden; }
+    .progress-fill { height:100%; border-radius:50px; background:linear-gradient(90deg,#1a56a4,#059669); }
+    .progress-count { width:50px; text-align:right; font-size:.82rem; color:#6b7280; }
+    .stat-badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:50px; font-size:.75rem; font-weight:700; }
+    .badge-ok  { background:#d1fae5; color:#065f46; }
+    .badge-no  { background:#fee2e2; color:#991b1b; }
+    .badge-part{ background:#fef3c7; color:#92400e; }
+    @media(max-width:640px){ .summary-grid{ grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-brand">
+      <img src="logo.png" alt="โลโก้" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.4)">
+      <div class="navbar-title">งานแนะแนว<small>โรงเรียนยางวิทยาคาร</small></div>
+    </a>
+    <button class="hamburger" onclick="document.getElementById('navMenu').classList.toggle('open')">☰</button>
+    <ul class="navbar-nav" id="navMenu">
+      <li><a href="index.html">🏠 หน้าหลัก</a></li>
+      <li><a href="scholarships.html">🏆 ทุนการศึกษา</a></li>
+      <li><a href="students.html">📋 ทะเบียนนักเรียน</a></li>
+      <li><a href="portfolio.html">📁 Portfolio</a></li>
+      <li><a href="tracking.html">📊 ติดตามการสมัคร</a></li>
+      <li><a href="report.html" class="active">📈 รายงานสรุป</a></li>
+      <li data-role="admin"><a href="admin.html">⚙️ จัดการผู้ใช้</a></li>
+    </ul>
+    <div id="navUserInfo"></div>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header">
+    <h1>📈 รายงานสรุปภาพรวม</h1>
+    <p>สถิติและสถานะการดำเนินงานแนะแนว โรงเรียนยางวิทยาคาร</p>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-num" id="sumStudents">–</div>
+      <div class="summary-label">นักเรียนทั้งหมด</div>
+      <div class="summary-sub" id="subStudents">กำลังโหลด...</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num" id="sumPortfolio">–</div>
+      <div class="summary-label">มี Portfolio แล้ว</div>
+      <div class="summary-sub" id="subPortfolio">คิดเป็น – %</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num" id="sumTracking">–</div>
+      <div class="summary-label">สมัครทุน/มหาวิทยาลัย</div>
+      <div class="summary-sub" id="subTracking">รายการทั้งหมด</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num" id="sumScholar">–</div>
+      <div class="summary-label">ทุนที่เปิดรับอยู่</div>
+      <div class="summary-sub" id="subScholar">จากทั้งหมด – รายการ</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('byClass',this)">📊 แยกตามห้อง</button>
+    <button class="tab-btn" onclick="switchTab('portfolio',this)">📁 Portfolio</button>
+    <button class="tab-btn" onclick="switchTab('scholarship',this)">🏆 การสมัครทุน</button>
+    <button class="tab-btn" onclick="switchTab('pending',this)" data-role="admin">👥 ผู้รออนุมัติ</button>
+  </div>
+
+  <!-- Tab: แยกตามห้อง -->
+  <div class="tab-panel active" id="tab-byClass">
+    <div class="card">
+      <div class="card-header">
+        <h2>📊 สถานะนักเรียนแยกตามห้อง</h2>
+        <button class="btn btn-secondary btn-sm" onclick="exportClassReport()">📥 Export Excel</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ห้องเรียน</th><th>จำนวน</th><th>มี Portfolio</th><th>สมัครทุน/มหา</th><th>ครบข้อมูล</th>
+            </tr>
+          </thead>
+          <tbody id="classBody">
+            <tr><td colspan="5" class="loading"><div class="spinner"></div><br>กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Portfolio -->
+  <div class="tab-panel" id="tab-portfolio">
+    <div class="card">
+      <div class="card-header">
+        <h2>📁 สถานะ Portfolio นักเรียน</h2>
+        <button class="btn btn-secondary btn-sm" onclick="exportPortfolioReport()">📥 Export Excel</button>
+      </div>
+      <div style="padding:1rem 1.5rem">
+        <div id="portfolioChart"></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>นักเรียน</th><th>ชั้น/ห้อง</th><th>Portfolio</th><th>จำนวนไฟล์</th></tr>
+          </thead>
+          <tbody id="portfolioBody">
+            <tr><td colspan="4" class="loading"><div class="spinner"></div><br>กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: การสมัครทุน -->
+  <div class="tab-panel" id="tab-scholarship">
+    <div class="card">
+      <div class="card-header">
+        <h2>🏆 สรุปการสมัครทุน / มหาวิทยาลัย</h2>
+        <button class="btn btn-secondary btn-sm" onclick="exportTrackingReport()">📥 Export Excel</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>นักเรียน</th><th>ชั้น/ห้อง</th><th>รายการที่สมัคร</th><th>สถานะล่าสุด</th></tr>
+          </thead>
+          <tbody id="trackingBody">
+            <tr><td colspan="4" class="loading"><div class="spinner"></div><br>กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: ผู้รออนุมัติ (Admin only) -->
+  <div class="tab-panel" id="tab-pending" data-role="admin">
+    <div class="card">
+      <div class="card-header">
+        <h2>👥 ผู้ลงทะเบียนรออนุมัติ</h2>
+        <a href="admin.html" class="btn btn-primary btn-sm">⚙️ ไปจัดการ</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>ชื่อ</th><th>ประเภท</th><th>อีเมล</th><th>เบอร์โทร</th><th>วันที่สมัคร</th></tr>
+          </thead>
+          <tbody id="pendingBody">
+            <tr><td colspan="5" class="loading"><div class="spinner"></div><br>กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer"><p>งานแนะแนว โรงเรียนยางวิทยาคาร | อ.ศรีขรภูมิ จ.สุรินทร์</p></footer>
+
+<script>
+  let _students=[], _portfolio=[], _tracking=[], _scholars=[], _users=[];
+
+  initAuth({
+    requireAuth: true,
+    allowedRoles: ['admin','teacher','exec'],
+    onReady: (user, role) => { loadAll(role); }
+  });
+
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+id).classList.add('active');
+  }
+
+  function fmtDate(ts) {
+    if (!ts) return '-';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'});
+  }
+
+  async function loadAll(role) {
+    try {
+      const promises = [
+        getData(COL.STUDENTS),
+        getData(COL.PORTFOLIO),
+        getData(COL.TRACKING),
+        getData(COL.SCHOLARSHIPS),
+      ];
+      if (role === 'admin') promises.push(db.collection('users').get());
+
+      const results = await Promise.all(promises);
+      _students  = results[0];
+      _portfolio = results[1];
+      _tracking  = results[2];
+      _scholars  = results[3];
+
+      if (role === 'admin' && results[4]) {
+        _users = [];
+        results[4].forEach(d => {
+          if (d.data().role !== 'admin') _users.push({id:d.id,...d.data()});
+        });
+      }
+
+      updateSummary();
+      renderClassReport();
+      renderPortfolioReport();
+      renderTrackingReport();
+      if (role === 'admin') renderPendingReport();
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  function updateSummary() {
+    const total = _students.length;
+    const withPort = new Set(_portfolio.map(p=>p.studentCode||p.studentId)).size;
+    const openSchol = _scholars.filter(s=>s.status==='เปิดรับ').length;
+
+    document.getElementById('sumStudents').textContent  = total;
+    document.getElementById('sumPortfolio').textContent = withPort;
+    document.getElementById('sumTracking').textContent  = _tracking.length;
+    document.getElementById('sumScholar').textContent   = openSchol;
+    document.getElementById('subStudents').textContent  = `ใน ${new Set(_students.map(s=>s.classroom||s.level+'/'+s.room)).size} ห้องเรียน`;
+    document.getElementById('subPortfolio').textContent = total ? `คิดเป็น ${Math.round(withPort/total*100)}%` : '-';
+    document.getElementById('subTracking').textContent  = `${new Set(_tracking.map(t=>t.studentCode||t.studentId)).size} คนได้สมัคร`;
+    document.getElementById('subScholar').textContent   = `จากทั้งหมด ${_scholars.length} รายการ`;
+  }
+
+  function renderClassReport() {
+    const classMap = {};
+    _students.forEach(s => {
+      const cls = s.classroom || (s.level+'/'+s.room) || '-';
+      if (!classMap[cls]) classMap[cls] = { count:0, withPort:0, withTrack:0, withInfo:0 };
+      classMap[cls].count++;
+      const hasPort  = _portfolio.some(p=>(p.studentCode||p.studentId)===s.studentCode);
+      const hasTrack = _tracking.some(t=>(t.studentCode||t.studentId)===s.studentCode);
+      const hasInfo  = !!(s.phone || s.parent);
+      if (hasPort)  classMap[cls].withPort++;
+      if (hasTrack) classMap[cls].withTrack++;
+      if (hasInfo)  classMap[cls].withInfo++;
+    });
+
+    const rows = Object.entries(classMap).sort(([a],[b])=>a.localeCompare(b,'th'));
+    document.getElementById('classBody').innerHTML = rows.map(([cls,d])=>`
+      <tr>
+        <td><strong>${cls}</strong></td>
+        <td><span class="badge badge-info">${d.count} คน</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <div style="flex:1;background:#e5e7eb;border-radius:50px;height:8px;overflow:hidden">
+              <div style="width:${d.count?Math.round(d.withPort/d.count*100):0}%;height:100%;background:#059669;border-radius:50px"></div>
+            </div>
+            <span style="font-size:.8rem;color:#6b7280;width:50px">${d.withPort}/${d.count}</span>
+          </div>
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <div style="flex:1;background:#e5e7eb;border-radius:50px;height:8px;overflow:hidden">
+              <div style="width:${d.count?Math.round(d.withTrack/d.count*100):0}%;height:100%;background:#1a56a4;border-radius:50px"></div>
+            </div>
+            <span style="font-size:.8rem;color:#6b7280;width:50px">${d.withTrack}/${d.count}</span>
+          </div>
+        </td>
+        <td><span class="stat-badge ${d.withInfo===d.count?'badge-ok':d.withInfo>0?'badge-part':'badge-no'}">${d.withInfo===d.count?'✅ ครบ':d.withInfo>0?`⚠️ ${d.withInfo}/${d.count}`:'❌ ยังไม่มี'}</span></td>
+      </tr>`).join('');
+  }
+
+  function renderPortfolioReport() {
+    const portMap = {};
+    _portfolio.forEach(p => {
+      const key = p.studentCode||p.studentId||'unknown';
+      portMap[key] = (portMap[key]||0) + 1;
+    });
+
+    document.getElementById('portfolioBody').innerHTML = _students.map(s => {
+      const cnt = portMap[s.studentCode] || 0;
+      return `<tr>
+        <td><div style="font-weight:600">${s.fullname||'-'}</div><div style="font-size:.78rem;color:#9ca3af">${s.studentCode||''}</div></td>
+        <td>${s.classroom||(s.level+'/'+s.room)||'-'}</td>
+        <td><span class="stat-badge ${cnt>0?'badge-ok':'badge-no'}">${cnt>0?'✅ มีแล้ว':'❌ ยังไม่มี'}</span></td>
+        <td>${cnt > 0 ? cnt+' ไฟล์' : '-'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderTrackingReport() {
+    // จัดกลุ่มตามนักเรียน
+    const trackMap = {};
+    _tracking.forEach(t => {
+      const key = t.studentCode||t.studentId||'unknown';
+      if (!trackMap[key]) trackMap[key] = [];
+      trackMap[key].push(t);
+    });
+
+    document.getElementById('trackingBody').innerHTML = _students.map(s => {
+      const items = trackMap[s.studentCode] || [];
+      if (!items.length) return `<tr>
+        <td><div style="font-weight:600">${s.fullname||'-'}</div><div style="font-size:.78rem;color:#9ca3af">${s.studentCode||''}</div></td>
+        <td>${s.classroom||(s.level+'/'+s.room)||'-'}</td>
+        <td><span style="color:#9ca3af;font-size:.85rem">ยังไม่ได้สมัคร</span></td>
+        <td>-</td></tr>`;
+      return `<tr>
+        <td><div style="font-weight:600">${s.fullname||'-'}</div><div style="font-size:.78rem;color:#9ca3af">${s.studentCode||''}</div></td>
+        <td>${s.classroom||(s.level+'/'+s.room)||'-'}</td>
+        <td style="font-size:.85rem">${items.map(i=>i.name||i.university||'-').join(', ')}</td>
+        <td><span class="stat-badge badge-ok">${items.length} รายการ</span></td></tr>`;
+    }).join('');
+  }
+
+  function renderPendingReport() {
+    const pending = _users.filter(u=>u.status==='pending');
+    if (!pending.length) {
+      document.getElementById('pendingBody').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:#9ca3af">✅ ไม่มีผู้รออนุมัติ</td></tr>`;
+      return;
+    }
+    const roleLabel = {teacher:'👨‍🏫 ครู',student:'👨‍🎓 นักเรียน',exec:'🏫 ผู้บริหาร'};
+    document.getElementById('pendingBody').innerHTML = pending.map(u=>`
+      <tr>
+        <td><strong>${u.displayName||'-'}</strong></td>
+        <td>${roleLabel[u.role]||u.role}</td>
+        <td style="font-size:.85rem">${u.email||'-'}</td>
+        <td>${u.phone||'-'}</td>
+        <td style="font-size:.82rem;color:#6b7280">${fmtDate(u.createdAt)}</td>
+      </tr>`).join('');
+  }
+
+  // ── Export ──
+  function exportClassReport() {
+    const hdr = ['ห้องเรียน','จำนวนนักเรียน','มี Portfolio','สมัครทุน/มหาวิทยาลัย'];
+    const classMap = {};
+    _students.forEach(s => {
+      const cls = s.classroom||(s.level+'/'+s.room)||'-';
+      if (!classMap[cls]) classMap[cls]={count:0,withPort:0,withTrack:0};
+      classMap[cls].count++;
+      if (_portfolio.some(p=>(p.studentCode||p.studentId)===s.studentCode)) classMap[cls].withPort++;
+      if (_tracking.some(t=>(t.studentCode||t.studentId)===s.studentCode)) classMap[cls].withTrack++;
+    });
+    const rows = Object.entries(classMap).sort(([a],[b])=>a.localeCompare(b,'th'))
+      .map(([cls,d])=>[cls,d.count,d.withPort+' คน',d.withTrack+' คน']);
+    exportExcel(hdr,rows,'รายงานแยกห้อง','รายงานแยกห้อง');
+    exportToast('📊 ดาวน์โหลด Excel แล้ว');
+  }
+
+  function exportPortfolioReport() {
+    const hdr = ['เลขประจำตัว','ชื่อ-สกุล','ชั้น/ห้อง','สถานะ Portfolio','จำนวนไฟล์'];
+    const portMap = {};
+    _portfolio.forEach(p=>{const k=p.studentCode||p.studentId||'';portMap[k]=(portMap[k]||0)+1;});
+    const rows = _students.map(s=>[s.studentCode||'-',s.fullname||'-',s.classroom||(s.level+'/'+s.room)||'-',portMap[s.studentCode]?'มีแล้ว':'ยังไม่มี',portMap[s.studentCode]||0]);
+    exportExcel(hdr,rows,'รายงาน Portfolio','รายงาน_Portfolio');
+    exportToast('📊 ดาวน์โหลด Excel แล้ว');
+  }
+
+  function exportTrackingReport() {
+    const hdr = ['เลขประจำตัว','ชื่อ-สกุล','ชั้น/ห้อง','จำนวนที่สมัคร','รายการ'];
+    const trackMap = {};
+    _tracking.forEach(t=>{const k=t.studentCode||t.studentId||'';if(!trackMap[k])trackMap[k]=[];trackMap[k].push(t.name||t.university||'-');});
+    const rows = _students.map(s=>[s.studentCode||'-',s.fullname||'-',s.classroom||(s.level+'/'+s.room)||'-',(trackMap[s.studentCode]||[]).length,(trackMap[s.studentCode]||[]).join(', ')||'ยังไม่ได้สมัคร']);
+    exportExcel(hdr,rows,'รายงานการสมัคร','รายงาน_การสมัคร');
+    exportToast('📊 ดาวน์โหลด Excel แล้ว');
+  }
+</script>
+</body>
+</html>

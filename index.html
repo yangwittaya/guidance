@@ -136,6 +136,7 @@
       <li><a href="students.html">📋 ทะเบียนนักเรียน</a></li>
       <li><a href="portfolio.html">📁 Portfolio</a></li>
       <li><a href="tracking.html">📊 ติดตามการสมัคร</a></li>
+      <li data-role="admin,teacher,exec"><a href="report.html">📈 รายงานสรุป</a></li>
       <li data-role="admin"><a href="admin.html">⚙️ จัดการผู้ใช้</a></li>
     </ul>
     <div id="navUserInfo"></div>
@@ -307,9 +308,13 @@
   }
 
   // ── AUTH ──
-  initAuth({ requireAuth: true, onReady: () => loadStats() });
+  initAuth({ requireAuth: true, onReady: (user, role) => {
+    if (role === 'student') loadStudentDashboard(user);
+    else loadStats(role);
+  }});
 
-  async function loadStats() {
+  // ── Dashboard สำหรับ Admin/ครู ──
+  async function loadStats(role) {
     try {
       const [scholars, students, tracking, portfolio] = await Promise.all([
         getData(COL.SCHOLARSHIPS),
@@ -317,17 +322,114 @@
         getData(COL.TRACKING),
         getData(COL.PORTFOLIO)
       ]);
-      document.getElementById('statScholar').textContent  = scholars.filter(d => d.status === 'เปิดรับ').length;
-      document.getElementById('statStudents').textContent = students.length;
-      document.getElementById('statTracking').textContent = tracking.filter(d => d.status === 'กำลังดำเนินการ' || d.status === 'รอผล').length;
-      document.getElementById('statPortfolio').textContent= portfolio.length;
+      document.getElementById('statScholar').textContent   = scholars.filter(d => d.status === 'เปิดรับ').length;
+      document.getElementById('statStudents').textContent  = students.length;
+      document.getElementById('statTracking').textContent  = tracking.filter(d => d.status === 'กำลังดำเนินการ' || d.status === 'รอผล').length;
+      document.getElementById('statPortfolio').textContent = portfolio.length;
+
+      if (role === 'admin') {
+        // แจ้งเตือนผู้รออนุมัติ
+        const usersSnap = await db.collection('users').get();
+        let pending = 0;
+        usersSnap.forEach(d => { if (d.data().status === 'pending') pending++; });
+        if (pending > 0) {
+          const banner = document.createElement('div');
+          banner.style.cssText = 'background:linear-gradient(135deg,#dc2626,#991b1b);color:white;padding:1rem 1.5rem;border-radius:12px;display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;cursor:pointer';
+          banner.innerHTML = `<span style="font-size:1.5rem">🔔</span><div><strong>มีผู้ลงทะเบียนรออนุมัติ ${pending} คน</strong><br><span style="font-size:.85rem;opacity:.9">คลิกเพื่อไปจัดการ</span></div>`;
+          banner.onclick = () => window.location.href = 'admin.html';
+          document.querySelector('.main-content').prepend(banner);
+        }
+
+        // ทุนใกล้หมดเขต (ภายใน 7 วัน)
+        const soon = scholars.filter(s => {
+          if (!s.closeDate || s.status !== 'เปิดรับ') return false;
+          const diff = Math.ceil((new Date(s.closeDate) - new Date()) / 86400000);
+          return diff >= 0 && diff <= 7;
+        });
+        if (soon.length > 0) {
+          const warn = document.createElement('div');
+          warn.style.cssText = 'background:#fef3c7;border:1px solid #fcd34d;color:#92400e;padding:1rem 1.5rem;border-radius:12px;display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem';
+          warn.innerHTML = `<span style="font-size:1.5rem">⏰</span><div><strong>ทุนใกล้หมดเขต ${soon.length} รายการ</strong><br><span style="font-size:.85rem">${soon.map(s=>s.name).join(', ')}</span></div>`;
+          document.querySelector('.main-content').prepend(warn);
+        }
+      }
     } catch(e) {
       console.error('โหลดสถิติไม่ได้:', e);
       ['statScholar','statStudents','statTracking','statPortfolio'].forEach(id => document.getElementById(id).textContent = '–');
     }
   }
 
-  // loadStats() ถูกเรียกจาก initAuth onReady แล้ว
+  // ── Dashboard ส่วนตัวนักเรียน ──
+  async function loadStudentDashboard(user) {
+    const studentCode = (user.email || '').split('@')[0];
+    try {
+      const [scholars, students, tracking, portfolio] = await Promise.all([
+        getData(COL.SCHOLARSHIPS),
+        getData(COL.STUDENTS),
+        getData(COL.TRACKING),
+        getData(COL.PORTFOLIO)
+      ]);
+
+      // ข้อมูลตัวเอง
+      const myRecord   = students.find(s => String(s.studentCode).trim() === studentCode);
+      const myTracking = tracking.filter(t => t.studentCode === studentCode || t.studentId === studentCode);
+      const myPortfolio= portfolio.filter(p => p.studentCode === studentCode || p.studentId === studentCode);
+      const openSchol  = scholars.filter(s => s.status === 'เปิดรับ');
+
+      // อัปเดตตัวเลข stats
+      document.getElementById('statScholar').textContent   = openSchol.length;
+      document.getElementById('statStudents').textContent  = myRecord ? '✅' : '⚠️';
+      document.getElementById('statTracking').textContent  = myTracking.length;
+      document.getElementById('statPortfolio').textContent = myPortfolio.length;
+
+      // เปลี่ยน label ให้เหมาะกับนักเรียน
+      const labels = document.querySelectorAll('.stat-label');
+      if (labels[1]) labels[1].textContent = 'ทะเบียนของฉัน';
+      if (labels[2]) labels[2].textContent = 'ทุนที่สมัครแล้ว';
+      if (labels[3]) labels[3].textContent = 'ไฟล์ Portfolio';
+
+      // Banner แจ้งเตือน
+      const main = document.querySelector('.main-content');
+
+      if (!myRecord) {
+        const warn = document.createElement('div');
+        warn.style.cssText = 'background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:1rem 1.5rem;border-radius:12px;display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem';
+        warn.innerHTML = `<span style="font-size:1.5rem">⚠️</span><div><strong>ยังไม่มีทะเบียนนักเรียนของคุณ</strong><br><span style="font-size:.85rem">กรุณาติดต่อครูแนะแนวเพื่อเพิ่มข้อมูล (เลขประจำตัว: ${studentCode})</span></div>`;
+        main.prepend(warn);
+      }
+
+      if (myPortfolio.length === 0) {
+        const info = document.createElement('div');
+        info.style.cssText = 'background:#dbeafe;border:1px solid #bfdbfe;color:#1e40af;padding:1rem 1.5rem;border-radius:12px;display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;cursor:pointer';
+        info.innerHTML = `<span style="font-size:1.5rem">📁</span><div><strong>ยังไม่มีไฟล์ Portfolio</strong><br><span style="font-size:.85rem">คลิกเพื่อไปอัปโหลด Portfolio ของคุณ</span></div>`;
+        info.onclick = () => window.location.href = 'portfolio.html';
+        main.prepend(info);
+      }
+
+      // ทุนใกล้หมดเขต
+      const soonSchol = openSchol.filter(s => {
+        if (!s.closeDate) return false;
+        const diff = Math.ceil((new Date(s.closeDate) - new Date()) / 86400000);
+        return diff >= 0 && diff <= 14;
+      });
+      if (soonSchol.length > 0) {
+        const warn2 = document.createElement('div');
+        warn2.style.cssText = 'background:#fef3c7;border:1px solid #fcd34d;color:#92400e;padding:1rem 1.5rem;border-radius:12px;display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;cursor:pointer';
+        warn2.innerHTML = `<span style="font-size:1.5rem">⏰</span><div><strong>ทุนที่กำลังเปิดรับ ${soonSchol.length} รายการ</strong><br><span style="font-size:.85rem">${soonSchol.map(s=>s.name).join(', ')}</span></div>`;
+        warn2.onclick = () => window.location.href = 'scholarships.html';
+        main.prepend(warn2);
+      }
+
+      // ชื่อนักเรียนใน hero
+      if (myRecord) {
+        const heroP = document.querySelector('.hero p');
+        if (heroP) heroP.textContent = `สวัสดี ${myRecord.fullname} ชั้น ${myRecord.classroom || myRecord.level+'/'+myRecord.room} — ยินดีต้อนรับสู่ระบบงานแนะแนว`;
+      }
+    } catch(e) {
+      console.error(e);
+      ['statScholar','statStudents','statTracking','statPortfolio'].forEach(id => document.getElementById(id).textContent = '–');
+    }
+  }
 </script>
 </body>
 </html>
