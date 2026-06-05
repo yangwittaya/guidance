@@ -72,12 +72,18 @@
     </div>
   </div>
 
-  <div class="filter-bar">
+  <div class="filter-bar" style="align-items:center">
     <button class="filter-btn active" onclick="filterByType('all',this)">ทั้งหมด</button>
     <button class="filter-btn" onclick="filterByType('เต็มจำนวน',this)">🌟 เต็มจำนวน</button>
     <button class="filter-btn" onclick="filterByType('บางส่วน',this)">⭐ บางส่วน</button>
     <button class="filter-btn" onclick="filterByType('กู้ยืม',this)">💳 กู้ยืม</button>
     <button class="filter-btn" onclick="filterByType('ขาดแคลน',this)">❤️ ขาดแคลน</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:.5rem">
+      <span style="font-size:.85rem;color:var(--gray-600);font-weight:600;white-space:nowrap">📅 ปีการศึกษา:</span>
+      <select class="form-control" id="filterYear" style="width:auto;padding:.35rem .75rem;font-size:.85rem" onchange="applyFilters()">
+        <option value="">ทุกปี</option>
+      </select>
+    </div>
   </div>
 
   <div id="scholarshipGrid" class="scholarship-grid">
@@ -176,10 +182,12 @@
 <script>
   window._scholarships = [];
   let allScholarships = [];
+  let currentDisplayedSch = []; // รายการที่แสดงอยู่ตอนนี้ (ใช้กับ export)
   let currentFilter  = 'all';
 
   // สร้างตัวเลือกปีการศึกษา 2569-2600
   (function buildYearOptions() {
+    // dropdown ในฟอร์มเพิ่มทุน
     const sel = document.getElementById('fYear');
     for (let y = 2569; y <= 2600; y++) {
       const opt = document.createElement('option');
@@ -187,6 +195,13 @@
       sel.appendChild(opt);
     }
     sel.value = 2569; // default
+    // dropdown filter ปีการศึกษา (ในหน้าหลัก)
+    const fSel = document.getElementById('filterYear');
+    for (let y = 2569; y <= 2600; y++) {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      fSel.appendChild(opt);
+    }
   })();
 
   function toggleMenu() { document.getElementById('navMenu').classList.toggle('open'); }
@@ -215,6 +230,7 @@
       let data = await getData(COL.SCHOLARSHIPS);
       allScholarships = data;
       window._scholarships = data;
+      currentDisplayedSch = data;
       renderScholarships(allScholarships);
     } catch(e) {
       grid.innerHTML = `<div class="alert alert-danger" style="grid-column:1/-1">⚠️ โหลดข้อมูลไม่ได้: ${e.message}</div>`;
@@ -283,10 +299,13 @@
   }
 
   function applyFilters() {
-    const q = document.getElementById('searchInput').value.toLowerCase();
+    const q    = document.getElementById('searchInput').value.toLowerCase();
+    const year = document.getElementById('filterYear').value;
     let result = allScholarships;
     if (currentFilter !== 'all') result = result.filter(s => s.type === currentFilter);
-    if (q) result = result.filter(s => Object.values(s).some(v => String(v).toLowerCase().includes(q)));
+    if (year) result = result.filter(s => String(s.academicYear) === String(year));
+    if (q)    result = result.filter(s => Object.values(s).some(v => String(v).toLowerCase().includes(q)));
+    currentDisplayedSch = result;
     renderScholarships(result);
   }
 
@@ -369,17 +388,22 @@
 
 
   // ── Export ──
-  const HDR_SCH = ['#','ชื่อทุน','ประเภท','จำนวนเงิน','สถานะ','วันเปิด','วันปิด'];
+  const HDR_SCH = ['#','ชื่อทุน','ปีการศึกษา','ประเภท','จำนวนเงิน','สถานะ','วันเปิด','วันปิด'];
+  function getSchTitle() {
+    const year = document.getElementById('filterYear').value;
+    return 'ทุนการศึกษา' + (year ? ' ปีการศึกษา ' + year : ' (ทุกปี)');
+  }
   function getSchRows() {
-    return (window._scholarships||[]).map((s,i) => [
-      i+1, s.name||'-', s.type||'-', s.amount||'-',
-      s.status||'-', s.openDate||'-', s.closeDate||'-'
+    const list = currentDisplayedSch.length ? currentDisplayedSch : (window._scholarships||[]);
+    return list.map((s,i) => [
+      i+1, s.name||'-', s.academicYear||'-', s.type||'-',
+      s.amount||'-', s.status||'-', s.openDate||'-', s.closeDate||'-'
     ]);
   }
   createExportButton('exportBtnScholarship', {
-    excel: () => { exportExcel(HDR_SCH, getSchRows(), 'ทุนการศึกษา', 'ทุนการศึกษา'); exportToast('📊 ดาวน์โหลด Excel แล้ว'); },
-    pdf:   () => exportPDF('ทุนการศึกษา', HDR_SCH, getSchRows(), ['4%','30%','12%','14%','10%','12%','12%']),
-    word:  () => { exportWord('ทุนการศึกษา', HDR_SCH, getSchRows()); exportToast('📝 ดาวน์โหลด Word แล้ว'); }
+    excel: () => { exportExcel(HDR_SCH, getSchRows(), 'ทุนการศึกษา', getSchTitle()); exportToast('📊 ดาวน์โหลด Excel แล้ว'); },
+    pdf:   () => exportPDF(getSchTitle(), HDR_SCH, getSchRows(), ['4%','28%','10%','11%','12%','9%','10%','10%']),
+    word:  () => { exportWord(getSchTitle(), HDR_SCH, getSchRows()); exportToast('📝 ดาวน์โหลด Word แล้ว'); }
   });
   // loadScholarships() ถูกเรียกจาก initAuth onReady แล้ว
 </script>
