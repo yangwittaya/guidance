@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ล้างบัญชีซ้ำ - งานแนะแนว ยางวิทยาคาร</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <style>
+    .section-card {
+      background: white; border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      margin-bottom: 1.5rem; overflow: hidden;
+    }
+    .section-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #f3f4f6;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .section-header h2 { font-size: 1rem; font-weight: 700; margin: 0; }
+    .section-header p  { font-size: .82rem; color: #6b7280; margin: .2rem 0 0; }
+
+    .dup-row {
+      border-bottom: 1px solid #f3f4f6;
+      padding: 1rem 1.5rem;
+    }
+    .dup-row:last-child { border-bottom: none; }
+    .dup-name { font-weight: 700; font-size: .95rem; margin-bottom: .5rem; }
+    .dup-code { font-size: .82rem; color: #6b7280; }
+
+    .account-item {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .75rem; padding: .5rem .75rem; border-radius: 8px;
+      margin-top: .4rem; flex-wrap: wrap;
+    }
+    .account-item.good   { background: #d1fae5; }
+    .account-item.bad    { background: #fff7ed; border: 1px solid #fed7aa; }
+    .account-item.bad2   { background: #fee2e2; border: 1px solid #fca5a5; }
+
+    .email-tag { font-size: .83rem; font-weight: 600; font-family: monospace; }
+    .good  .email-tag { color: #065f46; }
+    .bad   .email-tag { color: #c2410c; }
+    .bad2  .email-tag { color: #991b1b; }
+
+    .status-tag {
+      font-size: .75rem; font-weight: 700; padding: 2px 8px;
+      border-radius: 50px;
+    }
+    .tag-keep   { background: #d1fae5; color: #065f46; }
+    .tag-delete { background: #fee2e2; color: #991b1b; }
+    .tag-done   { background: #e5e7eb; color: #6b7280; }
+
+    .btn-del {
+      padding: .35rem .9rem; background: #dc2626; color: white;
+      border: none; border-radius: 7px; font-family: inherit;
+      font-size: .78rem; font-weight: 700; cursor: pointer;
+      transition: background .15s; white-space: nowrap;
+    }
+    .btn-del:hover { background: #b91c1c; }
+    .btn-del:disabled { background: #d1d5db; cursor: default; }
+
+    .btn-all {
+      padding: .5rem 1.25rem; background: linear-gradient(135deg,#dc2626,#991b1b);
+      color: white; border: none; border-radius: 9px;
+      font-family: inherit; font-size: .9rem; font-weight: 700;
+      cursor: pointer; transition: opacity .15s;
+    }
+    .btn-all:hover { opacity: .88; }
+    .btn-all:disabled { background: #9ca3af; cursor: default; }
+
+    .progress-bar {
+      height: 6px; background: #f3f4f6; border-radius: 3px;
+      margin: .5rem 0; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: #dc2626; border-radius: 3px;
+      transition: width .3s;
+    }
+
+    .summary-box {
+      background: #f0fdf4; border: 1.5px solid #86efac;
+      border-radius: 12px; padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .summary-box h3 { color: #166534; font-size: .95rem; margin: 0 0 .4rem; }
+    .summary-box p  { color: #15803d; font-size: .85rem; margin: 0; }
+
+    .warn-box {
+      background: #fff7ed; border: 1.5px solid #fed7aa;
+      border-radius: 12px; padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .warn-box h3 { color: #92400e; font-size: .95rem; margin: 0 0 .4rem; }
+    .warn-box p  { color: #b45309; font-size: .85rem; margin: 0; }
+
+    .empty-state {
+      text-align: center; padding: 3rem 1rem; color: #9ca3af;
+      font-size: .9rem;
+    }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: .5rem; }
+
+    .spinner-wrap {
+      text-align: center; padding: 3rem;
+      color: #6b7280; font-size: .9rem;
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-brand">
+      <img src="logo.png" alt="โลโก้" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.4)">
+      <div class="navbar-title">งานแนะแนว<small>โรงเรียนยางวิทยาคาร</small></div>
+    </a>
+    <ul class="navbar-nav">
+      <li><a href="admin.html">⚙️ จัดการผู้ใช้</a></li>
+    </ul>
+    <div id="navUserInfo"></div>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header">
+    <h1>🧹 ล้างบัญชีซ้ำ</h1>
+    <p>ตรวจหาและลบบัญชีนักเรียนที่ลงทะเบียนซ้ำหรือมี email ผิด format</p>
+  </div>
+
+  <div class="warn-box">
+    <h3>⚠️ คำเตือน</h3>
+    <p>หน้านี้จะ<strong>ลบบัญชีผู้ใช้</strong>ออกจาก Firestore อย่างถาวร กรุณาตรวจสอบรายการก่อนลบทุกครั้ง
+    บัญชีที่แนะนำให้ลบคือบัญชี <strong>email ผิด format</strong> ที่มีบัญชี email ถูกอยู่แล้ว</p>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#dbeafe">👥</div>
+      <div><div class="stat-number" id="statTotal">–</div><div class="stat-label">บัญชีทั้งหมด</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fee2e2">⚠️</div>
+      <div><div class="stat-number" id="statDup" style="color:#dc2626">–</div><div class="stat-label">กลุ่มที่ซ้ำ</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fef3c7">🗑️</div>
+      <div><div class="stat-number" id="statBad" style="color:#d97706">–</div><div class="stat-label">บัญชีแนะนำให้ลบ</div></div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loadingBox" class="spinner-wrap">
+    <div class="spinner"></div><br>กำลังวิเคราะห์ข้อมูล...
+  </div>
+
+  <!-- Result: no duplicates -->
+  <div id="noDupBox" style="display:none">
+    <div class="empty-state">
+      <div class="icon">✅</div>
+      <div>ไม่พบบัญชีที่ซ้ำกัน — ระบบสะอาดดีครับ</div>
+    </div>
+  </div>
+
+  <!-- Duplicate list -->
+  <div id="resultBox" style="display:none">
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <h2>🔴 บัญชีที่ซ้ำกัน</h2>
+          <p>บัญชีสีส้ม = email ผิด format (แนะนำให้ลบ) · บัญชีสีเขียว = email ถูก (เก็บไว้)</p>
+        </div>
+        <button class="btn-all" id="btnDeleteAll" onclick="confirmDeleteAll()">
+          🗑️ ลบทั้งหมดที่แนะนำ
+        </button>
+      </div>
+      <div id="dupList"></div>
+    </div>
+  </div>
+
+  <!-- Wrong email (no correct counterpart) -->
+  <div id="wrongBox" style="display:none">
+    <div class="section-card">
+      <div class="section-header">
+        <div>
+          <h2>🟡 email ผิด ไม่มีบัญชีถูก</h2>
+          <p>นักเรียนลงทะเบียนด้วย email ผิด และไม่มีบัญชีที่ถูกต้อง — ควรแก้ไข email ไม่ใช่ลบ</p>
+        </div>
+      </div>
+      <div id="wrongList"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ──────────────────────────────────────────────
+// ฟังก์ชันหลัก: ดึงรหัสนักเรียนจาก user record
+// ──────────────────────────────────────────────
+function getEffectiveCode(u) {
+  if (u.studentId && String(u.studentId).trim()) return String(u.studentId).trim();
+  const email = u.email || u.loginEmail || '';
+  if (email.includes('@student.')) return email.split('@')[0].trim();
+  return '';
+}
+
+// email prefix ปกติ: "02xxx" (5 หลัก, ขึ้นต้นด้วย 0)
+function isNormalEmail(email) {
+  const prefix = (email || '').split('@')[0].trim();
+  return /^0\d{4}$/.test(prefix); // ขึ้นต้นด้วย 0 และ 5 หลักพอดี
+}
+
+// ──────────────────────────────────────────────
+// ข้อมูลหลัก
+// ──────────────────────────────────────────────
+let allUsers   = [];
+let toDelete   = []; // uid ที่แนะนำให้ลบ (email ผิด + มีคู่ถูก)
+let deletedSet = new Set();
+
+initAuth({
+  requireAuth: true,
+  allowedRoles: ['admin'],
+  onReady: () => { analyzeUsers(); }
+});
+
+async function analyzeUsers() {
+  try {
+    const snap = await db.collection('users').get();
+    allUsers = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      if (d.role === 'admin') return;
+      if (d.role !== 'student') return; // เฉพาะนักเรียน
+      allUsers.push({ id: doc.id, ...d });
+    });
+
+    document.getElementById('statTotal').textContent = allUsers.length;
+    document.getElementById('loadingBox').style.display = 'none';
+
+    // จัดกลุ่มตาม effectiveCode
+    const groups = {};
+    allUsers.forEach(u => {
+      const code = getEffectiveCode(u);
+      if (!code) return;
+      if (!groups[code]) groups[code] = [];
+      groups[code].push(u);
+    });
+
+    // หากลุ่มที่มีมากกว่า 1 บัญชี
+    const dupGroups = Object.entries(groups).filter(([, list]) => list.length > 1);
+    // หาบัญชี email ผิดที่ไม่มีคู่ถูก
+    const wrongOnly = Object.entries(groups).filter(([, list]) => {
+      if (list.length > 1) return false; // dupGroup จัดแล้ว
+      return !isNormalEmail(list[0].email || '');
+    });
+
+    document.getElementById('statDup').textContent  = dupGroups.length;
+
+    if (dupGroups.length === 0 && wrongOnly.length === 0) {
+      document.getElementById('noDupBox').style.display = 'block';
+      document.getElementById('statBad').textContent = '0';
+      return;
+    }
+
+    // render dup groups
+    if (dupGroups.length > 0) {
+      document.getElementById('resultBox').style.display = 'block';
+      renderDupGroups(dupGroups);
+    }
+
+    // render wrong-only
+    if (wrongOnly.length > 0) {
+      document.getElementById('wrongBox').style.display = 'block';
+      renderWrongOnly(wrongOnly);
+    }
+
+    // นับ toDelete
+    document.getElementById('statBad').textContent = toDelete.length;
+
+  } catch(err) {
+    document.getElementById('loadingBox').innerHTML =
+      `<div style="color:#dc2626;text-align:center;padding:2rem">⚠️ โหลดข้อมูลไม่ได้: ${err.message}</div>`;
+  }
+}
+
+function renderDupGroups(groups) {
+  const container = document.getElementById('dupList');
+  container.innerHTML = '';
+
+  groups.forEach(([code, list]) => {
+    // แยก "ถูก" vs "ผิด"
+    const goodAccounts = list.filter(u => isNormalEmail(u.email || ''));
+    const badAccounts  = list.filter(u => !isNormalEmail(u.email || ''));
+
+    // ถ้าทุกบัญชีดูเป็น "ถูก" ให้เรียงตามวันสร้าง เก็บอันแรก ลบที่เหลือ
+    let keepList, deleteList;
+    if (goodAccounts.length > 0) {
+      keepList   = goodAccounts;
+      deleteList = badAccounts;
+    } else {
+      // ทุก account email ผิด → เก็บอันเก่าสุด ลบที่เหลือ
+      const sorted = [...list].sort((a,b) => {
+        const ta = a.createdAt?.toMillis?.() || 0;
+        const tb = b.createdAt?.toMillis?.() || 0;
+        return ta - tb;
+      });
+      keepList   = [sorted[0]];
+      deleteList = sorted.slice(1);
+    }
+
+    deleteList.forEach(u => { if (!toDelete.includes(u.id)) toDelete.push(u.id); });
+
+    const userName = list[0].displayName || list[0].fname || code;
+
+    const div = document.createElement('div');
+    div.className = 'dup-row';
+    div.id = `group-${code}`;
+    div.innerHTML = `
+      <div class="dup-name">👤 ${userName}</div>
+      <div class="dup-code">รหัสนักเรียน: <strong>${code}</strong> · ${list.length} บัญชี</div>
+      ${keepList.map(u => `
+        <div class="account-item good" id="acc-${u.id}">
+          <div>
+            <span class="status-tag tag-keep">✅ เก็บไว้</span>
+            <span class="email-tag" style="margin-left:.5rem">${u.email||'-'}</span>
+          </div>
+          <div style="font-size:.78rem;color:#374151">${u.displayName||''}</div>
+        </div>`).join('')}
+      ${deleteList.map(u => `
+        <div class="account-item bad" id="acc-${u.id}">
+          <div>
+            <span class="status-tag tag-delete" id="tag-${u.id}">🗑️ แนะนำลบ</span>
+            <span class="email-tag" style="margin-left:.5rem">${u.email||'-'}</span>
+          </div>
+          <button class="btn-del" id="btn-${u.id}" onclick="confirmDeleteOne('${u.id}','${(u.displayName||u.email||'').replace(/'/g,"\\'")}')">
+            🗑️ ลบ
+          </button>
+        </div>`).join('')}
+    `;
+    container.appendChild(div);
+  });
+}
+
+function renderWrongOnly(groups) {
+  const container = document.getElementById('wrongList');
+  container.innerHTML = '';
+
+  groups.forEach(([code, list]) => {
+    const u = list[0];
+    const div = document.createElement('div');
+    div.className = 'dup-row';
+    div.innerHTML = `
+      <div class="dup-name">👤 ${u.displayName || u.fname || code}</div>
+      <div class="dup-code">รหัสนักเรียน: <strong>${code}</strong> · email: <code>${u.email||'-'}</code></div>
+      <div class="account-item bad2" style="margin-top:.4rem">
+        <div>
+          <span class="status-tag" style="background:#fef3c7;color:#92400e">⚠️ email ผิด format</span>
+          <span class="email-tag" style="margin-left:.5rem">${u.email||'-'}</span>
+        </div>
+        <div style="font-size:.78rem;color:#6b7280">ควรแก้ไข email ให้เป็น <strong>${code}@student.yangwittaya.ac.th</strong></div>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+// ──────────────────────────────────────────────
+// ลบบัญชีเดียว
+// ──────────────────────────────────────────────
+async function confirmDeleteOne(uid, name) {
+  if (!confirm(`ลบบัญชี "${name}" ออกจากระบบ?\n\nการกระทำนี้ไม่สามารถย้อนกลับได้`)) return;
+  await doDelete(uid);
+}
+
+async function doDelete(uid) {
+  const btn = document.getElementById('btn-' + uid);
+  const tag = document.getElementById('tag-' + uid);
+  if (btn) btn.disabled = true;
+  try {
+    await db.collection('users').doc(uid).delete();
+    await db.collection('registrations').doc(uid).delete().catch(() => {});
+    deletedSet.add(uid);
+
+    const accEl = document.getElementById('acc-' + uid);
+    if (accEl) {
+      accEl.style.background = '#f3f4f6';
+      accEl.style.border = 'none';
+      if (tag) { tag.className = 'status-tag tag-done'; tag.textContent = '✅ ลบแล้ว'; }
+      if (btn) btn.style.display = 'none';
+    }
+
+    // อัปเดต stats
+    const remaining = toDelete.filter(id => !deletedSet.has(id)).length;
+    document.getElementById('statBad').textContent = remaining;
+    document.getElementById('statTotal').textContent = allUsers.length - deletedSet.size;
+
+    showToast('ลบเรียบร้อยแล้ว 🗑️');
+  } catch(err) {
+    if (btn) btn.disabled = false;
+    showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+  }
+}
+
+// ──────────────────────────────────────────────
+// ลบทั้งหมดที่แนะนำ
+// ──────────────────────────────────────────────
+async function confirmDeleteAll() {
+  const remaining = toDelete.filter(id => !deletedSet.has(id));
+  if (remaining.length === 0) { showToast('ไม่มีรายการที่ต้องลบ'); return; }
+  if (!confirm(`ยืนยันลบบัญชีที่ซ้ำทั้งหมด ${remaining.length} บัญชี?\n\nการกระทำนี้ไม่สามารถย้อนกลับได้`)) return;
+
+  const btn = document.getElementById('btnDeleteAll');
+  btn.disabled = true;
+  btn.textContent = `⏳ กำลังลบ 0/${remaining.length}...`;
+
+  for (let i = 0; i < remaining.length; i++) {
+    btn.textContent = `⏳ กำลังลบ ${i+1}/${remaining.length}...`;
+    await doDelete(remaining[i]);
+    await new Promise(r => setTimeout(r, 300)); // หน่วงเล็กน้อย
+  }
+
+  btn.textContent = `✅ ลบครบแล้ว (${remaining.length} บัญชี)`;
+  showToast(`ลบบัญชีซ้ำครบ ${remaining.length} บัญชีแล้ว ✅`);
+}
+
+// ──────────────────────────────────────────────
+// Toast
+// ──────────────────────────────────────────────
+function showToast(msg, type='success') {
+  let t = document.getElementById('_toast');
+  if (!t) {
+    t = document.createElement('div'); t.id = '_toast';
+    t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;padding:.875rem 1.25rem;border-radius:10px;font-size:.875rem;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:opacity .3s;font-family:Sarabun,sans-serif';
+    document.body.appendChild(t);
+  }
+  t.style.background = type==='error' ? '#dc2626' : '#059669';
+  t.style.color = 'white'; t.textContent = msg; t.style.opacity = '1';
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => { t.style.opacity = '0'; }, 3500);
+}
+</script>
+</body>
+</html>
