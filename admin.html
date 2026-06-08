@@ -534,12 +534,23 @@ async function loadAll() {
 
 async function loadUsers() { await loadAll(); }
 
+function getEffectiveStudentId(u) {
+  // 1. ใช้ studentId field ถ้ามี
+  if (u.studentId && String(u.studentId).trim()) return String(u.studentId).trim();
+  // 2. ดึงจาก email: "02156@student.yangwittaya.ac.th" → "02156"
+  const email = u.email || u.loginEmail || '';
+  if (email.includes('@student.')) return email.split('@')[0].trim();
+  // 3. ดึงจาก loginEmail
+  if (u.loginEmail && u.loginEmail.includes('@student.')) return u.loginEmail.split('@')[0].trim();
+  return '';
+}
+
 function computeMismatch() {
   // หานักเรียนที่ลงทะเบียน (role=student) แต่รหัสไม่ตรงทะเบียน
   mismatchList = allUsers.filter(u => {
     if (u.role !== 'student') return false;
-    const sid = String(u.studentId || '').trim();
-    if (!sid) return true; // ไม่มีรหัสเลย
+    const sid = getEffectiveStudentId(u);
+    if (!sid) return true; // หารหัสไม่ได้เลย
     return !allStudents.has(sid);
   });
 }
@@ -813,9 +824,9 @@ function renderMismatch() {
     return;
   }
   tbody.innerHTML = mismatchList.map(u => {
-    const sid = u.studentId || '-';
-    const hasId = (u.studentId || '').trim() !== '';
-    const reason = !hasId ? '<span style="color:#dc2626">ไม่มีรหัสในระบบ</span>'
+    const sid = getEffectiveStudentId(u) || '-';
+    const hasId = sid !== '-';
+    const reason = !hasId ? '<span style="color:#dc2626">หารหัสไม่ได้เลย</span>'
                           : '<span style="color:#ea580c">รหัสไม่ตรงทะเบียน</span>';
     const statusBadge = u.status === 'approved'
       ? '<span style="color:#059669;font-weight:600">✅ อนุมัติแล้ว</span>'
@@ -847,9 +858,10 @@ function openEditStudentId(uid) {
   editSidUid = uid;
   const u = allUsers.find(x => x.id === uid);
   if (!u) return;
+  const effectiveId = getEffectiveStudentId(u);
   document.getElementById('editSidName').textContent    = u.displayName || u.email || uid;
-  document.getElementById('editSidCurrent').textContent = u.studentId || '(ว่าง)';
-  document.getElementById('editSidInput').value         = u.studentId || '';
+  document.getElementById('editSidCurrent').textContent = effectiveId || '(ว่าง)';
+  document.getElementById('editSidInput').value         = effectiveId || '';
   document.getElementById('editSidStatus').textContent  = '';
   openModal('editStudentIdModal');
 }
