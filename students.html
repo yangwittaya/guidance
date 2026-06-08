@@ -242,16 +242,20 @@
     try {
       const snap = await db.collection('users').get();
       snap.docs.forEach(d => {
-        const email = d.data().email || '';
+        const data  = d.data();
+        // วิธี 1: email เป็น @student.yangwittaya.ac.th → ดึง prefix
+        const email = data.email || data.loginEmail || '';
         if (email.includes('@student.yangwittaya.ac.th')) {
           registeredCodes.add(email.split('@')[0].trim());
         }
+        // วิธี 2: มี studentId field ตรงๆ (กรณีลงทะเบียนด้วย Gmail แต่กรอกรหัสไว้)
+        if (data.studentId && String(data.studentId).trim()) {
+          registeredCodes.add(String(data.studentId).trim());
+        }
       });
       showRegCol = true;
-      // อัปเดตสรุป
       updateRegSummary();
     } catch(e) {
-      // ไม่มีสิทธิ์อ่าน users → ซ่อนคอลัมน์
       showRegCol = false;
     }
   }
