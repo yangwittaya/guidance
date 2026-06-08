@@ -546,13 +546,27 @@ function getEffectiveStudentId(u) {
   return '';
 }
 
+function isNormalEmailPrefix(prefix) {
+  return /^0\d{4}$/.test(prefix);
+}
+
 function computeMismatch() {
-  // หานักเรียนที่ลงทะเบียน (role=student) แต่รหัสไม่ตรงทะเบียน
+  // หานักเรียนที่ลงทะเบียน (role=student) แต่:
+  // 1. หารหัสไม่ได้เลย
+  // 2. รหัสไม่ตรงทะเบียน
+  // 3. email prefix ผิด format (เช่น 20294, 20057 แทนที่จะเป็น 02249, 02057)
   mismatchList = allUsers.filter(u => {
     if (u.role !== 'student') return false;
     const sid = getEffectiveStudentId(u);
     if (!sid) return true; // หารหัสไม่ได้เลย
-    return !allStudents.has(sid);
+    if (!allStudents.has(sid)) return true; // รหัสไม่ตรงทะเบียน
+    // ตรวจ email prefix format
+    const email = u.email || u.loginEmail || '';
+    if (email.includes('@student.')) {
+      const prefix = email.split('@')[0].trim();
+      if (!isNormalEmailPrefix(prefix)) return true; // email prefix ผิด format
+    }
+    return false;
   });
 }
 
@@ -827,8 +841,14 @@ function renderMismatch() {
   tbody.innerHTML = mismatchList.map(u => {
     const sid = getEffectiveStudentId(u) || '-';
     const hasId = sid !== '-';
-    const reason = !hasId ? '<span style="color:#dc2626">หารหัสไม่ได้เลย</span>'
-                          : '<span style="color:#ea580c">รหัสไม่ตรงทะเบียน</span>';
+    const email = u.email || u.loginEmail || '';
+    const emailPrefix = email.includes('@student.') ? email.split('@')[0].trim() : '';
+    const wrongEmailFormat = emailPrefix && !isNormalEmailPrefix(emailPrefix) && allStudents.has(sid);
+    const reason = !hasId
+      ? '<span style="color:#dc2626">หารหัสไม่ได้เลย</span>'
+      : wrongEmailFormat
+        ? `<span style="color:#7c3aed">⚠️ email prefix ผิด format (${emailPrefix})</span>`
+        : '<span style="color:#ea580c">รหัสไม่ตรงทะเบียน</span>';
     const statusBadge = u.status === 'approved'
       ? '<span style="color:#059669;font-weight:600">✅ อนุมัติแล้ว</span>'
       : u.status === 'pending'
