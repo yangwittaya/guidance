@@ -505,12 +505,13 @@ async function loadAll() {
     ]);
 
     // สร้าง Set ของรหัสนักเรียนทั้งหมดจาก students collection
+    // *** field จริงในทะเบียนคือ studentCode (ไม่ใช่ studentId) ***
     const studentIdSet = new Set();
     studentsSnap.forEach(doc => {
       const d = doc.data();
-      // รองรับทั้ง doc.id และ field studentId
       if (doc.id) studentIdSet.add(String(doc.id).trim());
-      if (d.studentId) studentIdSet.add(String(d.studentId).trim());
+      if (d.studentCode) studentIdSet.add(String(d.studentCode).trim());
+      if (d.studentId)   studentIdSet.add(String(d.studentId).trim()); // fallback
     });
     allStudents = studentIdSet;
 
