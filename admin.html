@@ -167,6 +167,21 @@
       padding: 3px 10px; border-radius: 50px; font-size: .78rem; font-weight: 700;
       background: #d1fae5; color: #065f46;
     }
+    /* ── Promote Tab ── */
+    .psb { display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:50px;font-size:.78rem;font-weight:700; }
+    .psb-studying    { background:#d1fae5; color:#065f46; }
+    .psb-repeat      { background:#dbeafe; color:#1e40af; }
+    .psb-graduated   { background:#a7f3d0; color:#065f46; }
+    .psb-transferred { background:#ede9fe; color:#5b21b6; }
+    .psb-dropout     { background:#fee2e2; color:#991b1b; }
+    .psb-inactive    { background:#f3f4f6; color:#6b7280; }
+    .promote-btn {
+      padding:.6rem 1.4rem;
+      background:linear-gradient(135deg,#1a56a4,#0d3b7a);
+      color:white;border:none;border-radius:9px;
+      font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap;
+    }
+    .promote-btn:hover { opacity:.9; }
     @media(max-width:768px) {
       .stats-grid { grid-template-columns: 1fr 1fr; }
     }
@@ -251,6 +266,9 @@
     </button>
     <button class="tab-btn" id="tab-mismatch" onclick="switchTab('mismatch')">
       ⚠️ รหัสไม่ตรงทะเบียน <span class="badge-count orange" id="badge-mismatch">0</span>
+    </button>
+    <button class="tab-btn" id="tab-promote" onclick="switchTab('promote')">
+      📈 เลื่อนชั้น
     </button>
   </div>
 
@@ -340,6 +358,79 @@
           </thead>
           <tbody id="mismatchBody">
             <tr><td colspan="7" class="loading"><div class="spinner"></div><br>กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Promote -->
+  <div class="tab-panel" id="panel-promote">
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#dbeafe">📈</div>
+        <div><div class="stat-number" id="promoteStatWill" style="color:#1a56a4">–</div><div class="stat-label">จะเลื่อนชั้น</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#d1fae5">🎓</div>
+        <div><div class="stat-number" id="promoteStatGrad" style="color:#059669">–</div><div class="stat-label">สำเร็จการศึกษา (ม.6)</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fef3c7">⚠️</div>
+        <div><div class="stat-number" id="promoteStatExcept" style="color:#d97706">–</div><div class="stat-label">ข้อยกเว้น</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#f3f4f6">👥</div>
+        <div><div class="stat-number" id="promoteStatTotal" style="color:#6b7280">–</div><div class="stat-label">นักเรียนทั้งหมด</div></div>
+      </div>
+    </div>
+
+    <!-- Filter + Action -->
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-body" style="padding:1rem 1.5rem">
+        <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+          <select class="form-control" id="filterPromoteGrade" onchange="renderPromoteTab()" style="width:auto">
+            <option value="">ทุกชั้น</option>
+            <option value="1">ม.1</option>
+            <option value="2">ม.2</option>
+            <option value="3">ม.3</option>
+            <option value="4">ม.4</option>
+            <option value="5">ม.5</option>
+            <option value="6">ม.6</option>
+          </select>
+          <select class="form-control" id="filterPromoteStatus" onchange="renderPromoteTab()" style="width:auto">
+            <option value="">ทุกสถานะ</option>
+            <option value="studying">กำลังศึกษา</option>
+            <option value="repeat">ซ้ำชั้น</option>
+            <option value="graduated">สำเร็จการศึกษา</option>
+            <option value="transferred">ย้ายโรงเรียน</option>
+            <option value="dropout">ลาออก</option>
+            <option value="inactive">ขาดการติดต่อ</option>
+          </select>
+          <input type="text" class="form-control" id="searchPromote" placeholder="ค้นหาชื่อ, รหัส..." oninput="renderPromoteTab()" style="flex:1;min-width:150px">
+          <button class="promote-btn" onclick="doPromoteAll()">📈 เลื่อนชั้นทั้งหมด</button>
+        </div>
+        <p style="margin-top:.75rem;font-size:.82rem;color:#6b7280">⚠️ ปรับสถานะนักเรียนที่ซ้ำชั้น/ลาออก/ย้ายก่อน แล้วค่อยกดเลื่อนชั้นทั้งหมด</p>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="card-header"><h2>📋 รายชื่อนักเรียน — เลื่อนชั้น</h2></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ชื่อ-นามสกุล / รหัส</th>
+              <th>ชั้นปัจจุบัน</th>
+              <th>สถานะ</th>
+              <th>ชั้นที่จะเลื่อน</th>
+              <th>การดำเนินการ</th>
+            </tr>
+          </thead>
+          <tbody id="promoteBody">
+            <tr><td colspan="5" class="loading"><div class="spinner"></div><br>กำลังโหลด...</td></tr>
           </tbody>
         </table>
       </div>
@@ -466,6 +557,32 @@
   </div>
 </div>
 
+<!-- Modal: ปรับสถานะนักเรียน -->
+<div class="modal-overlay" id="studentStatusModal">
+  <div class="modal" style="max-width:480px">
+    <button class="modal-close" onclick="closeModal('studentStatusModal')">✕</button>
+    <h3>✏️ ปรับสถานะนักเรียน</h3>
+    <p style="font-size:.85rem;color:#6b7280;margin-bottom:1rem">นักเรียน: <strong id="ssName"></strong></p>
+    <div class="form-group">
+      <label class="form-label">ชั้น/ห้อง</label>
+      <input type="text" class="form-control" id="ssClassroom" placeholder="เช่น ม.3/2">
+      <div style="font-size:.78rem;color:#6b7280;margin-top:.3rem">แก้ไขได้กรณีข้อมูลไม่ถูกต้อง</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">สถานะนักเรียน</label>
+      <select class="form-control" id="ssStatus">
+        <option value="studying">🟢 กำลังศึกษา — จะเลื่อนชั้น</option>
+        <option value="repeat">🔁 ซ้ำชั้น — อยู่ชั้นเดิม</option>
+        <option value="graduated">🎓 สำเร็จการศึกษา</option>
+        <option value="transferred">↗️ ย้ายโรงเรียน</option>
+        <option value="dropout">❌ ลาออก</option>
+        <option value="inactive">👻 ขาดการติดต่อ</option>
+      </select>
+    </div>
+    <button class="btn-primary-full" onclick="doSaveStudentStatus()">💾 บันทึกสถานะ</button>
+  </div>
+</div>
+
 <!-- Modal: ยืนยันลบ -->
 <div class="modal-overlay" id="deleteModal">
   <div class="modal">
@@ -484,11 +601,13 @@
 
 <script>
 let allUsers = [];
-let allStudents = [];   // students collection (Set of studentId)
-let mismatchList = [];  // users ที่ studentId ไม่ตรงทะเบียน
+let allStudents = [];       // students collection (Set of studentId)
+let allStudentsData = [];   // students collection (Array of objects)
+let mismatchList = [];      // users ที่ studentId ไม่ตรงทะเบียน
 let selectedUid = null;
 let selectedUser = null;
 let editSidUid = null;
+let editStudentDocId = null;
 
 initAuth({
   requireAuth: true,
@@ -514,6 +633,11 @@ async function loadAll() {
       if (d.studentId)   studentIdSet.add(String(d.studentId).trim()); // fallback
     });
     allStudents = studentIdSet;
+
+    allStudentsData = [];
+    studentsSnap.forEach(doc => {
+      allStudentsData.push({ id: doc.id, ...doc.data() });
+    });
 
     allUsers = [];
     usersSnap.forEach(doc => {
@@ -631,7 +755,7 @@ function extraInfo(u) {
   return u.position || '-';
 }
 
-function renderAll() { renderPending(); renderApproved(); renderSuspended(); renderMismatch(); }
+function renderAll() { renderPending(); renderApproved(); renderSuspended(); renderMismatch(); renderPromoteTab(); }
 
 function renderPending() {
   const list = getFiltered('pending');
@@ -957,6 +1081,202 @@ async function doAddNewStudent() {
     closeModal('addNewStudentModal');
   } catch(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
 }
+
+// ══════════════════════════════════════════
+// ── Promote Tab Functions ──────────────────
+// ══════════════════════════════════════════
+
+function parseClassroom(cls) {
+  if (!cls) return null;
+  const m = String(cls).match(/(\d)\/(\d+)/);
+  if (!m) return null;
+  return { level: parseInt(m[1]), room: m[2] };
+}
+
+function getNextClassroom(cls) {
+  const p = parseClassroom(cls);
+  if (!p) return cls;
+  if (p.level >= 6) return null; // สำเร็จการศึกษา
+  return `ม.${p.level + 1}/${p.room}`;
+}
+
+function getStatusBadge(status) {
+  const map = {
+    studying:    '<span class="psb psb-studying">🟢 กำลังศึกษา</span>',
+    repeat:      '<span class="psb psb-repeat">🔁 ซ้ำชั้น</span>',
+    graduated:   '<span class="psb psb-graduated">🎓 สำเร็จการศึกษา</span>',
+    transferred: '<span class="psb psb-transferred">↗️ ย้ายโรงเรียน</span>',
+    dropout:     '<span class="psb psb-dropout">❌ ลาออก</span>',
+    inactive:    '<span class="psb psb-inactive">👻 ขาดการติดต่อ</span>',
+  };
+  return map[status] || map.studying;
+}
+
+function renderPromoteTab() {
+  const tbody = document.getElementById('promoteBody');
+  if (!tbody) return;
+
+  const filterGrade  = (document.getElementById('filterPromoteGrade')?.value  || '');
+  const filterStatus = (document.getElementById('filterPromoteStatus')?.value || '');
+  const q            = (document.getElementById('searchPromote')?.value       || '').toLowerCase();
+
+  let students = allStudentsData;
+
+  if (filterGrade) {
+    students = students.filter(s => {
+      const p = parseClassroom(s.classroom);
+      return p && String(p.level) === filterGrade;
+    });
+  }
+  if (filterStatus) {
+    students = students.filter(s => (s.studentStatus || 'studying') === filterStatus);
+  }
+  if (q) {
+    students = students.filter(s => {
+      const hay = [s.fname, s.lname, s.prefix, s.studentCode, s.id, s.classroom].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
+  // คำนวณ stats จากทั้งหมด (ไม่ใช่แค่ filtered)
+  const allActive   = allStudentsData.filter(s => (s.studentStatus || 'studying') === 'studying');
+  const willGrad    = allActive.filter(s => { const p = parseClassroom(s.classroom); return p && p.level === 6; });
+  const exceptions  = allStudentsData.filter(s => {
+    const st = s.studentStatus || 'studying';
+    return st !== 'studying' && st !== 'graduated';
+  });
+
+  const elWill    = document.getElementById('promoteStatWill');
+  const elGrad    = document.getElementById('promoteStatGrad');
+  const elExcept  = document.getElementById('promoteStatExcept');
+  const elTotal   = document.getElementById('promoteStatTotal');
+  if (elWill)   elWill.textContent   = allActive.length - willGrad.length;
+  if (elGrad)   elGrad.textContent   = willGrad.length;
+  if (elExcept) elExcept.textContent = exceptions.length;
+  if (elTotal)  elTotal.textContent  = allStudentsData.length;
+
+  if (!allStudentsData.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2.5rem;color:#9ca3af">⏳ ยังไม่มีข้อมูลนักเรียน</td></tr>`;
+    return;
+  }
+  if (!students.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2.5rem;color:#9ca3af">ไม่พบนักเรียนที่ตรงกับตัวกรอง</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = students.map(s => {
+    const status = s.studentStatus || 'studying';
+    const isPromoting = status === 'studying';
+    const next = isPromoting ? getNextClassroom(s.classroom) : null;
+    const nextDisplay = (next === null)
+      ? '<span class="psb psb-graduated">🎓 สำเร็จการศึกษา</span>'
+      : next
+        ? `<span style="color:#1a56a4;font-weight:600">${next}</span>`
+        : '<span style="color:#9ca3af">— ไม่เลื่อน —</span>';
+    const code = s.studentCode || s.id;
+    const name = `${s.prefix||''}${s.fname||''} ${s.lname||''}`.trim() || '-';
+    return `<tr>
+      <td><div style="font-weight:600">${name}</div>
+          <div style="font-size:.78rem;color:#6b7280">${code}</div></td>
+      <td style="font-weight:600">${s.classroom||'-'}</td>
+      <td>${getStatusBadge(status)}</td>
+      <td>${nextDisplay}</td>
+      <td><button class="btn-sm btn-view" onclick="openStudentStatusModal('${s.id}')">✏️ ปรับสถานะ</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function openStudentStatusModal(docId) {
+  editStudentDocId = docId;
+  const s = allStudentsData.find(x => x.id === docId);
+  if (!s) return;
+  const code = s.studentCode || s.id;
+  const name = `${s.prefix||''}${s.fname||''} ${s.lname||''}`.trim();
+  document.getElementById('ssName').textContent = `${name} (${code})`;
+  document.getElementById('ssClassroom').value  = s.classroom || '';
+  document.getElementById('ssStatus').value     = s.studentStatus || 'studying';
+  openModal('studentStatusModal');
+}
+
+async function doSaveStudentStatus() {
+  const status    = document.getElementById('ssStatus').value;
+  const classroom = document.getElementById('ssClassroom').value.trim();
+  try {
+    await db.collection('students').doc(editStudentDocId).update({ studentStatus: status, classroom });
+    const idx = allStudentsData.findIndex(s => s.id === editStudentDocId);
+    if (idx !== -1) { allStudentsData[idx].studentStatus = status; allStudentsData[idx].classroom = classroom; }
+    renderPromoteTab();
+    showToast('บันทึกสถานะเรียบร้อยแล้ว ✅');
+    closeModal('studentStatusModal');
+  } catch(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
+}
+
+async function doPromoteAll() {
+  const toPromote = allStudentsData.filter(s => (s.studentStatus || 'studying') === 'studying');
+  if (!toPromote.length) { showToast('ไม่มีนักเรียนที่จะเลื่อนชั้น', 'error'); return; }
+
+  const willGrad    = toPromote.filter(s => { const p = parseClassroom(s.classroom); return p && p.level >= 6; });
+  const willMove    = toPromote.filter(s => { const p = parseClassroom(s.classroom); return p && p.level < 6; });
+
+  const confirmed = confirm(
+    `ยืนยันเลื่อนชั้นทั้งหมด?\n\n` +
+    `📈 เลื่อนชั้น: ${willMove.length} คน\n` +
+    `🎓 สำเร็จการศึกษา (ม.6): ${willGrad.length} คน\n\n` +
+    `การกระทำนี้จะแก้ไขข้อมูลใน Firestore`
+  );
+  if (!confirmed) return;
+
+  showToast('กำลังเลื่อนชั้น...', 'success');
+
+  try {
+    // ── Batch อัปเดต students collection ──
+    const batch = db.batch();
+    for (const s of toPromote) {
+      const p = parseClassroom(s.classroom);
+      if (!p) continue;
+      const newCls    = p.level >= 6 ? 'สำเร็จการศึกษา' : `ม.${p.level + 1}/${p.room}`;
+      const newStatus = p.level >= 6 ? 'graduated' : 'studying';
+      batch.update(db.collection('students').doc(s.id), {
+        classroom: newCls,
+        studentStatus: newStatus,
+        promotedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    await batch.commit();
+
+    // ── Batch อัปเดต users collection ──
+    const codeToUser = {};
+    allUsers.forEach(u => { const sid = getEffectiveStudentId(u); if (sid) codeToUser[sid] = u; });
+
+    const userBatch = db.batch();
+    let hasUserUpdates = false;
+    for (const s of willMove) {
+      const code = s.studentCode || s.id;
+      const newCls = getNextClassroom(s.classroom);
+      if (!newCls) continue;
+      const matchUser = codeToUser[code];
+      if (matchUser) {
+        userBatch.update(db.collection('users').doc(matchUser.id), { classroom: newCls });
+        hasUserUpdates = true;
+      }
+    }
+    if (hasUserUpdates) await userBatch.commit();
+
+    // ── บันทึกประวัติ ──
+    await db.collection('promotionHistory').add({
+      promotedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      promotedBy: firebase.auth().currentUser?.email || 'admin',
+      totalPromoted: willMove.length,
+      totalGraduated: willGrad.length
+    });
+
+    showToast(`เลื่อนชั้นเรียบร้อย ✅  เลื่อน ${willMove.length} คน | จบ ${willGrad.length} คน`);
+    await loadAll();
+
+  } catch(err) { showToast('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
+}
+
+// ══════════════════════════════════════════
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
