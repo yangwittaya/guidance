@@ -169,12 +169,13 @@
     }
     /* ── Promote Tab ── */
     .psb { display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:50px;font-size:.78rem;font-weight:700; }
-    .psb-studying    { background:#d1fae5; color:#065f46; }
-    .psb-repeat      { background:#dbeafe; color:#1e40af; }
-    .psb-graduated   { background:#a7f3d0; color:#065f46; }
-    .psb-transferred { background:#ede9fe; color:#5b21b6; }
-    .psb-dropout     { background:#fee2e2; color:#991b1b; }
-    .psb-inactive    { background:#f3f4f6; color:#6b7280; }
+    .psb-studying      { background:#d1fae5; color:#065f46; }
+    .psb-repeat        { background:#dbeafe; color:#1e40af; }
+    .psb-graduated     { background:#a7f3d0; color:#065f46; }
+    .psb-graduated_m3  { background:#fef9c3; color:#854d0e; }
+    .psb-transferred   { background:#ede9fe; color:#5b21b6; }
+    .psb-dropout       { background:#fee2e2; color:#991b1b; }
+    .psb-inactive      { background:#f3f4f6; color:#6b7280; }
     .promote-btn {
       padding:.6rem 1.4rem;
       background:linear-gradient(135deg,#1a56a4,#0d3b7a);
@@ -403,9 +404,10 @@
             <option value="">ทุกสถานะ</option>
             <option value="studying">กำลังศึกษา</option>
             <option value="repeat">ซ้ำชั้น</option>
-            <option value="graduated">สำเร็จการศึกษา</option>
+            <option value="graduated">สำเร็จการศึกษา ม.ปลาย</option>
+            <option value="graduated_m3">สำเร็จการศึกษา ม.ต้น</option>
             <option value="transferred">ย้ายโรงเรียน</option>
-            <option value="dropout">ลาออก</option>
+            <option value="dropout">ลาออกกลางคัน</option>
             <option value="inactive">ขาดการติดต่อ</option>
           </select>
           <input type="text" class="form-control" id="searchPromote" placeholder="ค้นหาชื่อ, รหัส..." oninput="renderPromoteTab()" style="flex:1;min-width:150px">
@@ -573,10 +575,15 @@
       <select class="form-control" id="ssStatus">
         <option value="studying">🟢 กำลังศึกษา — จะเลื่อนชั้น</option>
         <option value="repeat">🔁 ซ้ำชั้น — อยู่ชั้นเดิม</option>
-        <option value="graduated">🎓 สำเร็จการศึกษา</option>
-        <option value="transferred">↗️ ย้ายโรงเรียน</option>
-        <option value="dropout">❌ ลาออก</option>
-        <option value="inactive">👻 ขาดการติดต่อ</option>
+        <optgroup label="── สำเร็จการศึกษา ──">
+          <option value="graduated">🎓 สำเร็จการศึกษา ม.ปลาย (ม.6)</option>
+          <option value="graduated_m3">📜 สำเร็จการศึกษา ม.ต้น (ม.3) — ไม่ได้เรียนต่อที่นี่</option>
+        </optgroup>
+        <optgroup label="── ออกจากโรงเรียน ──">
+          <option value="transferred">↗️ ย้ายโรงเรียน — เรียนต่อที่อื่น</option>
+          <option value="dropout">❌ ลาออกกลางคัน</option>
+          <option value="inactive">👻 ขาดการติดต่อ</option>
+        </optgroup>
       </select>
     </div>
     <button class="btn-primary-full" onclick="doSaveStudentStatus()">💾 บันทึกสถานะ</button>
@@ -1102,12 +1109,13 @@ function getNextClassroom(cls) {
 
 function getStatusBadge(status) {
   const map = {
-    studying:    '<span class="psb psb-studying">🟢 กำลังศึกษา</span>',
-    repeat:      '<span class="psb psb-repeat">🔁 ซ้ำชั้น</span>',
-    graduated:   '<span class="psb psb-graduated">🎓 สำเร็จการศึกษา</span>',
-    transferred: '<span class="psb psb-transferred">↗️ ย้ายโรงเรียน</span>',
-    dropout:     '<span class="psb psb-dropout">❌ ลาออก</span>',
-    inactive:    '<span class="psb psb-inactive">👻 ขาดการติดต่อ</span>',
+    studying:     '<span class="psb psb-studying">🟢 กำลังศึกษา</span>',
+    repeat:       '<span class="psb psb-repeat">🔁 ซ้ำชั้น</span>',
+    graduated:    '<span class="psb psb-graduated">🎓 สำเร็จการศึกษา ม.ปลาย</span>',
+    graduated_m3: '<span class="psb psb-graduated_m3">📜 สำเร็จการศึกษา ม.ต้น</span>',
+    transferred:  '<span class="psb psb-transferred">↗️ ย้ายโรงเรียน</span>',
+    dropout:      '<span class="psb psb-dropout">❌ ลาออกกลางคัน</span>',
+    inactive:     '<span class="psb psb-inactive">👻 ขาดการติดต่อ</span>',
   };
   return map[status] || map.studying;
 }
@@ -1143,7 +1151,7 @@ function renderPromoteTab() {
   const willGrad    = allActive.filter(s => { const p = parseClassroom(s.classroom); return p && p.level === 6; });
   const exceptions  = allStudentsData.filter(s => {
     const st = s.studentStatus || 'studying';
-    return st !== 'studying' && st !== 'graduated';
+    return st !== 'studying' && st !== 'graduated' && st !== 'graduated_m3';
   });
 
   const elWill    = document.getElementById('promoteStatWill');
@@ -1218,10 +1226,13 @@ async function doPromoteAll() {
   const willGrad    = toPromote.filter(s => { const p = parseClassroom(s.classroom); return p && p.level >= 6; });
   const willMove    = toPromote.filter(s => { const p = parseClassroom(s.classroom); return p && p.level < 6; });
 
+  const willGradM3 = allStudentsData.filter(s => (s.studentStatus || '') === 'graduated_m3');
+
   const confirmed = confirm(
     `ยืนยันเลื่อนชั้นทั้งหมด?\n\n` +
     `📈 เลื่อนชั้น: ${willMove.length} คน\n` +
-    `🎓 สำเร็จการศึกษา (ม.6): ${willGrad.length} คน\n\n` +
+    `🎓 สำเร็จการศึกษา ม.ปลาย (ม.6): ${willGrad.length} คน\n` +
+    `📜 สำเร็จการศึกษา ม.ต้น (ม.3): ${willGradM3.length} คน\n\n` +
     `การกระทำนี้จะแก้ไขข้อมูลใน Firestore`
   );
   if (!confirmed) return;
