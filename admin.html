@@ -189,6 +189,65 @@
     @media(max-width:640px) {
       .stats-grid { grid-template-columns: 1fr 1fr; }
     }
+
+    /* ── Storage Widget ── */
+    .storage-widget {
+      background: white;
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .storage-widget-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.1rem;
+    }
+    .storage-widget-title {
+      font-weight: 700; font-size: 0.95rem; color: #1f2937;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .storage-widget-refresh {
+      background: none; border: 1px solid #e5e7eb; border-radius: 8px;
+      padding: 0.35rem 0.75rem; font-size: 0.78rem; color: #6b7280;
+      cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 0.35rem;
+      transition: all .15s;
+    }
+    .storage-widget-refresh:hover { background: #f3f4f6; color: #374151; }
+    .storage-rows { display: flex; flex-direction: column; gap: 1rem; }
+    .storage-row {}
+    .storage-row-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0.4rem;
+    }
+    .storage-row-label {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.85rem; font-weight: 600; color: #374151;
+    }
+    .storage-row-label .svc-icon {
+      width: 26px; height: 26px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+    }
+    .storage-row-nums {
+      font-size: 0.8rem; color: #6b7280; text-align: right;
+    }
+    .storage-row-nums strong { color: #1f2937; font-size: 0.88rem; }
+    .progress-track {
+      height: 10px; background: #f3f4f6; border-radius: 99px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 99px;
+      transition: width 0.8s cubic-bezier(.4,0,.2,1);
+    }
+    .progress-fill.green  { background: linear-gradient(90deg,#10b981,#34d399); }
+    .progress-fill.yellow { background: linear-gradient(90deg,#f59e0b,#fbbf24); }
+    .progress-fill.red    { background: linear-gradient(90deg,#ef4444,#f87171); }
+    .progress-note {
+      font-size: 0.73rem; color: #9ca3af; margin-top: 0.3rem;
+      display: flex; align-items: center; gap: 0.3rem;
+    }
+    .storage-divider { border: none; border-top: 1px solid #f3f4f6; margin: 0.25rem 0; }
   </style>
 </head>
 <body>
@@ -251,6 +310,83 @@
     <div class="stat-card" style="cursor:pointer" onclick="switchTab('mismatch')">
       <div class="stat-icon" style="background:#fff7ed">⚠️</div>
       <div><div class="stat-number" id="cntMismatch" style="color:#ea580c">–</div><div class="stat-label">รหัสไม่ตรงทะเบียน</div></div>
+    </div>
+  </div>
+
+  <!-- Storage Widget -->
+  <div class="storage-widget" id="storageWidget">
+    <div class="storage-widget-head">
+      <div class="storage-widget-title">📦 สถานะพื้นที่จัดเก็บข้อมูล</div>
+      <button class="storage-widget-refresh" onclick="loadStorageStats()" id="storageRefreshBtn">
+        🔄 รีเฟรช
+      </button>
+    </div>
+    <div class="storage-rows">
+
+      <!-- Cloudinary (ไฟล์ Portfolio) -->
+      <div class="storage-row">
+        <div class="storage-row-head">
+          <div class="storage-row-label">
+            <div class="svc-icon" style="background:#fef3c7">☁️</div>
+            Cloudinary — ไฟล์ Portfolio
+          </div>
+          <div class="storage-row-nums">
+            <strong id="cloudUsedText">–</strong>
+            <span> / 25 GB</span>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill green" id="cloudBar" style="width:0%"></div>
+        </div>
+        <div class="progress-note">
+          <span id="cloudNote">กำลังโหลด...</span>
+        </div>
+      </div>
+
+      <hr class="storage-divider">
+
+      <!-- Firestore (ฐานข้อมูล) -->
+      <div class="storage-row">
+        <div class="storage-row-head">
+          <div class="storage-row-label">
+            <div class="svc-icon" style="background:#dbeafe">🗄️</div>
+            Firestore — ฐานข้อมูล
+          </div>
+          <div class="storage-row-nums">
+            <strong id="fsDocsText">–</strong>
+            <span> เอกสาร (ประมาณ <span id="fsEstText">–</span>)</span>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill green" id="fsBar" style="width:0%"></div>
+        </div>
+        <div class="progress-note">
+          <span id="fsNote">กำลังโหลด...</span>
+        </div>
+      </div>
+
+      <hr class="storage-divider">
+
+      <!-- Firebase Auth (ผู้ใช้) -->
+      <div class="storage-row">
+        <div class="storage-row-head">
+          <div class="storage-row-label">
+            <div class="svc-icon" style="background:#d1fae5">👥</div>
+            Firebase Auth — บัญชีผู้ใช้
+          </div>
+          <div class="storage-row-nums">
+            <strong id="authUsersText">–</strong>
+            <span> บัญชี (ฟรีไม่จำกัด)</span>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill green" id="authBar" style="width:4%"></div>
+        </div>
+        <div class="progress-note">
+          <span id="authNote">กำลังโหลด...</span>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -1314,6 +1450,120 @@ function showToast(msg, type='success') {
   clearTimeout(t._tid);
   t._tid = setTimeout(() => { t.style.opacity = '0'; }, 3000);
 }
+
+// ══════════════════════════════════════════════
+//  STORAGE STATS
+// ══════════════════════════════════════════════
+
+/** แปลง string ขนาดไฟล์ เช่น "2.3 MB", "480 KB" → bytes */
+function parseSizeToBytes(sizeStr) {
+  if (!sizeStr || typeof sizeStr !== 'string') return 0;
+  const s = sizeStr.trim().toUpperCase();
+  const num = parseFloat(s);
+  if (isNaN(num)) return 0;
+  if (s.includes('GB')) return num * 1024 * 1024 * 1024;
+  if (s.includes('MB')) return num * 1024 * 1024;
+  if (s.includes('KB')) return num * 1024;
+  return num; // bytes
+}
+
+/** แปลง bytes → ข้อความแสดงผลที่อ่านง่าย */
+function fmtBytes(bytes) {
+  if (bytes >= 1024 * 1024 * 1024) return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+  if (bytes >= 1024 * 1024)        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  if (bytes >= 1024)               return (bytes / 1024).toFixed(1) + ' KB';
+  return bytes + ' B';
+}
+
+/** คืน class สีตามเปอร์เซ็นต์ */
+function pctColor(pct) {
+  if (pct >= 85) return 'red';
+  if (pct >= 60) return 'yellow';
+  return 'green';
+}
+
+async function loadStorageStats() {
+  const btn = document.getElementById('storageRefreshBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังโหลด...'; }
+
+  try {
+    // ── 1. Cloudinary: รวมขนาดไฟล์จาก portfolio collection ──
+    const portfolioSnap = await db.collection('portfolio').get();
+    let totalCloudBytes = 0;
+    portfolioSnap.forEach(doc => {
+      const d = doc.data();
+      // ลอง field ต่างๆ ที่อาจเก็บขนาดไฟล์
+      const rawSize = d.fileSize || d.size || d.bytes || '';
+      totalCloudBytes += parseSizeToBytes(rawSize);
+    });
+
+    const CLOUD_QUOTA_GB = 25;
+    const CLOUD_QUOTA_BYTES = CLOUD_QUOTA_GB * 1024 * 1024 * 1024;
+    const cloudPct = Math.min((totalCloudBytes / CLOUD_QUOTA_BYTES) * 100, 100);
+    const cloudRemaining = Math.max(CLOUD_QUOTA_BYTES - totalCloudBytes, 0);
+    const cloudColor = pctColor(cloudPct);
+
+    document.getElementById('cloudUsedText').textContent = fmtBytes(totalCloudBytes);
+    const cloudBar = document.getElementById('cloudBar');
+    cloudBar.style.width = Math.max(cloudPct, 0.5) + '%';
+    cloudBar.className = 'progress-fill ' + cloudColor;
+    document.getElementById('cloudNote').innerHTML =
+      `เหลือ <strong style="color:${cloudColor==='red'?'#dc2626':cloudColor==='yellow'?'#d97706':'#059669'}">${fmtBytes(cloudRemaining)}</strong>` +
+      ` · ใช้ไป ${cloudPct.toFixed(2)}% จาก ${CLOUD_QUOTA_GB} GB (Cloudinary Free)` +
+      ` · ${portfolioSnap.size} ไฟล์`;
+
+    // ── 2. Firestore: นับ document ทุก collection ──
+    const collections = ['users', 'students', 'scholarships', 'tracking', 'portfolio'];
+    let totalDocs = 0;
+    const counts = {};
+    await Promise.all(collections.map(async col => {
+      const snap = await db.collection(col).get();
+      counts[col] = snap.size;
+      totalDocs += snap.size;
+    }));
+
+    // ประมาณ 1 KB/doc average → เทียบกับ Firestore free 1 GB
+    const FS_QUOTA_BYTES = 1 * 1024 * 1024 * 1024; // 1 GB
+    const fsEstBytes = totalDocs * 1024;
+    const fsPct = Math.min((fsEstBytes / FS_QUOTA_BYTES) * 100, 100);
+    const fsRemaining = Math.max(FS_QUOTA_BYTES - fsEstBytes, 0);
+    const fsColor = pctColor(fsPct);
+
+    document.getElementById('fsDocsText').textContent = totalDocs.toLocaleString('th-TH');
+    document.getElementById('fsEstText').textContent = fmtBytes(fsEstBytes);
+    const fsBar = document.getElementById('fsBar');
+    fsBar.style.width = Math.max(fsPct, 0.5) + '%';
+    fsBar.className = 'progress-fill ' + fsColor;
+
+    const breakdown = collections.map(c => `${c}:${counts[c]}`).join(' · ');
+    document.getElementById('fsNote').innerHTML =
+      `เหลือประมาณ <strong style="color:${fsColor==='red'?'#dc2626':fsColor==='yellow'?'#d97706':'#059669'}">${fmtBytes(fsRemaining)}</strong>` +
+      ` · ใช้ไปประมาณ ${fsPct.toFixed(3)}% จาก 1 GB (Firestore Free)` +
+      `<br><span style="color:#9ca3af">${breakdown}</span>`;
+
+    // ── 3. Firebase Auth: นับจาก allUsers ที่โหลดไว้แล้ว ──
+    const userCount = allUsers ? allUsers.length : '–';
+    document.getElementById('authUsersText').textContent = typeof userCount === 'number' ? userCount.toLocaleString('th-TH') : userCount;
+    const authBar = document.getElementById('authBar');
+    authBar.style.width = typeof userCount === 'number' ? Math.max((userCount / 10000) * 100, 2) + '%' : '2%';
+    document.getElementById('authNote').innerHTML =
+      typeof userCount === 'number'
+        ? `บัญชีทั้งหมดในระบบ ${userCount.toLocaleString('th-TH')} บัญชี · Firebase Auth ไม่มีการจำกัดจำนวนผู้ใช้`
+        : 'รอโหลดข้อมูลผู้ใช้...';
+
+  } catch (err) {
+    console.error('loadStorageStats error:', err);
+    document.getElementById('cloudNote').textContent = '⚠️ โหลดไม่ได้: ' + err.message;
+    document.getElementById('fsNote').textContent    = '⚠️ โหลดไม่ได้: ' + err.message;
+  }
+
+  if (btn) { btn.disabled = false; btn.innerHTML = '🔄 รีเฟรช'; }
+}
+
+// โหลด storage stats หลังจากโหลด admin data เสร็จแล้ว 2 วินาที
+window.addEventListener('load', () => {
+  setTimeout(loadStorageStats, 2000);
+});
 </script>
 </body>
 </html>
