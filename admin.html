@@ -313,80 +313,79 @@
     </div>
   </div>
 
-  <!-- Storage Widget -->
+  <!-- Storage Widget (collapsible) -->
   <div class="storage-widget" id="storageWidget">
-    <div class="storage-widget-head">
-      <div class="storage-widget-title">📦 สถานะพื้นที่จัดเก็บข้อมูล</div>
-      <button class="storage-widget-refresh" onclick="loadStorageStats()" id="storageRefreshBtn">
-        🔄 รีเฟรช
-      </button>
+
+    <!-- Header — คลิกเพื่อซ่อน/แสดง -->
+    <div class="storage-widget-head" onclick="toggleStorage()" style="cursor:pointer;user-select:none">
+      <div class="storage-widget-title">
+        📦 สถานะพื้นที่จัดเก็บข้อมูล
+        <span id="storageChevron" style="font-size:0.75rem;color:#9ca3af;margin-left:0.25rem;display:inline-block;transition:transform .25s">▲</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem" onclick="event.stopPropagation()">
+        <!-- สรุปย่อ แสดงเมื่อซ่อน -->
+        <div id="storageSummary" style="font-size:0.78rem;color:#6b7280;display:none;gap:0.75rem;align-items:center">
+          <span>☁️ <strong id="sumCloud">–</strong></span>
+          <span style="color:#d1d5db">|</span>
+          <span>🗄️ <strong id="sumFs">–</strong> docs</span>
+          <span style="color:#d1d5db">|</span>
+          <span>👥 <strong id="sumAuth">–</strong> บัญชี</span>
+        </div>
+        <button class="storage-widget-refresh" onclick="loadStorageStats()" id="storageRefreshBtn">
+          🔄 รีเฟรช
+        </button>
+      </div>
     </div>
-    <div class="storage-rows">
 
-      <!-- Cloudinary (ไฟล์ Portfolio) -->
-      <div class="storage-row">
-        <div class="storage-row-head">
-          <div class="storage-row-label">
-            <div class="svc-icon" style="background:#fef3c7">☁️</div>
-            Cloudinary — ไฟล์ Portfolio
+    <!-- Body — ซ่อน/แสดงได้ -->
+    <div id="storageBody">
+      <div style="height:1rem"></div>
+      <div class="storage-rows">
+
+        <!-- Cloudinary -->
+        <div class="storage-row">
+          <div class="storage-row-head">
+            <div class="storage-row-label">
+              <div class="svc-icon" style="background:#fef3c7">☁️</div>
+              Cloudinary — ไฟล์ Portfolio
+            </div>
+            <div class="storage-row-nums"><strong id="cloudUsedText">–</strong><span> / 25 GB</span></div>
           </div>
-          <div class="storage-row-nums">
-            <strong id="cloudUsedText">–</strong>
-            <span> / 25 GB</span>
+          <div class="progress-track"><div class="progress-fill green" id="cloudBar" style="width:0%"></div></div>
+          <div class="progress-note"><span id="cloudNote">กำลังโหลด...</span></div>
+        </div>
+
+        <hr class="storage-divider">
+
+        <!-- Firestore -->
+        <div class="storage-row">
+          <div class="storage-row-head">
+            <div class="storage-row-label">
+              <div class="svc-icon" style="background:#dbeafe">🗄️</div>
+              Firestore — ฐานข้อมูล
+            </div>
+            <div class="storage-row-nums"><strong id="fsDocsText">–</strong><span> เอกสาร (ประมาณ <span id="fsEstText">–</span>)</span></div>
           </div>
+          <div class="progress-track"><div class="progress-fill green" id="fsBar" style="width:0%"></div></div>
+          <div class="progress-note"><span id="fsNote">กำลังโหลด...</span></div>
         </div>
-        <div class="progress-track">
-          <div class="progress-fill green" id="cloudBar" style="width:0%"></div>
+
+        <hr class="storage-divider">
+
+        <!-- Firebase Auth -->
+        <div class="storage-row">
+          <div class="storage-row-head">
+            <div class="storage-row-label">
+              <div class="svc-icon" style="background:#d1fae5">👥</div>
+              Firebase Auth — บัญชีผู้ใช้
+            </div>
+            <div class="storage-row-nums"><strong id="authUsersText">–</strong><span> บัญชี (ฟรีไม่จำกัด)</span></div>
+          </div>
+          <div class="progress-track"><div class="progress-fill green" id="authBar" style="width:2%"></div></div>
+          <div class="progress-note"><span id="authNote">กำลังโหลด...</span></div>
         </div>
-        <div class="progress-note">
-          <span id="cloudNote">กำลังโหลด...</span>
-        </div>
+
       </div>
-
-      <hr class="storage-divider">
-
-      <!-- Firestore (ฐานข้อมูล) -->
-      <div class="storage-row">
-        <div class="storage-row-head">
-          <div class="storage-row-label">
-            <div class="svc-icon" style="background:#dbeafe">🗄️</div>
-            Firestore — ฐานข้อมูล
-          </div>
-          <div class="storage-row-nums">
-            <strong id="fsDocsText">–</strong>
-            <span> เอกสาร (ประมาณ <span id="fsEstText">–</span>)</span>
-          </div>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill green" id="fsBar" style="width:0%"></div>
-        </div>
-        <div class="progress-note">
-          <span id="fsNote">กำลังโหลด...</span>
-        </div>
-      </div>
-
-      <hr class="storage-divider">
-
-      <!-- Firebase Auth (ผู้ใช้) -->
-      <div class="storage-row">
-        <div class="storage-row-head">
-          <div class="storage-row-label">
-            <div class="svc-icon" style="background:#d1fae5">👥</div>
-            Firebase Auth — บัญชีผู้ใช้
-          </div>
-          <div class="storage-row-nums">
-            <strong id="authUsersText">–</strong>
-            <span> บัญชี (ฟรีไม่จำกัด)</span>
-          </div>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill green" id="authBar" style="width:4%"></div>
-        </div>
-        <div class="progress-note">
-          <span id="authNote">กำลังโหลด...</span>
-        </div>
-      </div>
-
     </div>
   </div>
 
@@ -1452,6 +1451,28 @@ function showToast(msg, type='success') {
 }
 
 // ══════════════════════════════════════════════
+//  STORAGE WIDGET TOGGLE
+// ══════════════════════════════════════════════
+let storageOpen = true;
+function toggleStorage() {
+  const body     = document.getElementById('storageBody');
+  const chevron  = document.getElementById('storageChevron');
+  const summary  = document.getElementById('storageSummary');
+  storageOpen = !storageOpen;
+  if (storageOpen) {
+    body.style.display = '';
+    chevron.textContent = '▲';
+    chevron.style.transform = '';
+    summary.style.display = 'none';
+  } else {
+    body.style.display = 'none';
+    chevron.textContent = '▼';
+    chevron.style.transform = 'rotate(0deg)';
+    summary.style.display = 'flex';
+  }
+}
+
+// ══════════════════════════════════════════════
 //  STORAGE STATS
 // ══════════════════════════════════════════════
 
@@ -1556,6 +1577,14 @@ async function loadStorageStats() {
     document.getElementById('cloudNote').textContent = '⚠️ โหลดไม่ได้: ' + err.message;
     document.getElementById('fsNote').textContent    = '⚠️ โหลดไม่ได้: ' + err.message;
   }
+
+  // อัพเดต summary bar (แสดงตอนซ่อน)
+  const sc = document.getElementById('sumCloud');
+  const sf = document.getElementById('sumFs');
+  const sa = document.getElementById('sumAuth');
+  if (sc) sc.textContent = document.getElementById('cloudUsedText')?.textContent || '–';
+  if (sf) sf.textContent = document.getElementById('fsDocsText')?.textContent || '–';
+  if (sa) sa.textContent = document.getElementById('authUsersText')?.textContent || '–';
 
   if (btn) { btn.disabled = false; btn.innerHTML = '🔄 รีเฟรช'; }
 }
