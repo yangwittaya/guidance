@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>คู่มือการใช้งาน - ระบบงานแนะแนว โรงเรียนยางวิทยาคาร</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      --primary: #1a56a4;
+      --primary-dark: #0d3b7a;
+      --primary-light: #dbeafe;
+      --accent: #f59e0b;
+      --green: #10b981;
+      --purple: #8b5cf6;
+      --red: #ef4444;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-400: #9ca3af;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --shadow: 0 4px 20px rgba(0,0,0,0.12);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #f0f4f8;
+      color: var(--gray-800);
+      line-height: 1.7;
+    }
+
+    /* ===== COVER ===== */
+    .cover {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 5rem 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -20%;
+      width: 600px; height: 600px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+    .cover::after {
+      content: '';
+      position: absolute;
+      bottom: -30%; right: -10%;
+      width: 400px; height: 400px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+    .cover-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 100px;
+      padding: 0.4rem 1.2rem;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(10px);
+    }
+    .cover h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .cover h2 { font-size: 1.2rem; font-weight: 400; opacity: 0.85; margin-bottom: 2rem; }
+    .cover-logo {
+      width: 90px; height: 90px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem;
+      margin: 0 auto 1.5rem;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .cover-meta {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    .cover-meta span { display: flex; align-items: center; gap: 0.4rem; }
+
+    /* ===== NAV ===== */
+    .toc-nav {
+      background: white;
+      border-bottom: 1px solid var(--gray-200);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .toc-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .toc-inner::-webkit-scrollbar { display: none; }
+    .toc-inner a {
+      white-space: nowrap;
+      padding: 0.9rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--gray-600);
+      text-decoration: none;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .toc-inner a:hover {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* ===== CONTENT ===== */
+    .content {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+    }
+
+    /* ===== SECTION ===== */
+    .section {
+      margin-bottom: 4rem;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--gray-200);
+    }
+    .section-num {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .section-title { font-size: 1.5rem; font-weight: 700; color: var(--gray-800); }
+    .section-sub { font-size: 0.85rem; color: var(--gray-400); margin-top: 0.1rem; }
+
+    /* ===== CARD ===== */
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .card-head {
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--gray-700);
+    }
+    .card-body { padding: 1.5rem; }
+
+    /* ===== SCREEN MOCKUP ===== */
+    .mockup-browser {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--gray-200);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      margin: 1.5rem 0;
+    }
+    .mockup-bar {
+      background: #e8eaf0;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .mockup-dots { display: flex; gap: 6px; }
+    .mockup-dots span {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    .mockup-url {
+      flex: 1;
+      background: white;
+      border-radius: 6px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.78rem;
+      color: var(--gray-600);
+      font-family: monospace;
+    }
+    .mockup-screen {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      padding: 2rem 1.5rem;
+    }
+    .mockup-screen.white { background: var(--gray-50); padding: 1.5rem; }
+
+    /* Login mockup */
+    .mock-login-box {
+      max-width: 380px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 14px;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .mock-logo-area {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: white;
+    }
+    .mock-logo-icon {
+      width: 70px; height: 70px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 0.75rem;
+      border: 2px solid rgba(255,255,255,0.4);
+    }
+    .mock-logo-area h3 { font-size: 1.2rem; font-weight: 700; }
+    .mock-logo-area p { font-size: 0.78rem; opacity: 0.8; }
+    .mock-form-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 0.3rem;
+    }
+    .mock-input {
+      width: 100%;
+      background: var(--gray-100);
+      border: 1.5px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem 0.6rem 2rem;
+      font-size: 0.85rem;
+      color: var(--gray-600);
+      margin-bottom: 0.75rem;
+      position: relative;
+    }
+    .mock-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border-radius: 8px;
+      padding: 0.75rem;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+    .mock-register-btn {
+      width: 100%;
+      background: #f0f9ff;
+      border: 1.5px solid #bfdbfe;
+      color: #1e40af;
+      border-radius: 8px;
+      padding: 0.6rem;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-top: 1rem;
+    }
+    .mock-roles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--gray-100);
+    }
+    .mock-role-badge {
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .mock-manual-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      color: #15803d;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    /* Dashboard mockup */
+    .mock-navbar {
+      background: var(--primary);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .mock-nav-logo {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .mock-nav-title { color: white; font-weight: 700; font-size: 0.95rem; }
+    .mock-nav-links {
+      display: flex;
+      gap: 0.5rem;
+      margin-left: auto;
+    }
+    .mock-nav-link {
+      color: rgba(255,255,255,0.85);
+      font-size: 0.75rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+    }
+    .mock-nav-link.active { background: rgba(255,255,255,0.2); color: white; }
+
+    .mock-hero {
+      background: linear-gradient(135deg, var(--primary), #1e40af);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+    }
+    .mock-hero h3 { font-size: 1.2rem; font-weight: 700; }
+    .mock-hero p { font-size: 0.8rem; opacity: 0.85; }
+
+    .mock-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .mock-stat {
+      background: white;
+      border-radius: 10px;
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .mock-stat-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .mock-stat-num { font-size: 1.1rem; font-weight: 700; }
+    .mock-stat-lbl { font-size: 0.65rem; color: var(--gray-400); }
+
+    .mock-quick-links {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+    .mock-quick {
+      background: white;
+      border-radius: 10px;
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .mock-quick-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    /* Steps */
+    .steps { display: flex; flex-direction: column; gap: 1rem; }
+    .step {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      background: white;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      border: 1px solid var(--gray-200);
+      transition: box-shadow 0.2s;
+    }
+    .step:hover { box-shadow: var(--shadow); }
+    .step-num {
+      width: 36px; height: 36px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+    .step-body h4 { font-weight: 700; color: var(--gray-800); margin-bottom: 0.25rem; }
+    .step-body p { font-size: 0.88rem; color: var(--gray-600); }
+    .step-body .tip {
+      margin-top: 0.5rem;
+      background: #fef3c7;
+      border-left: 3px solid var(--accent);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.82rem;
+      color: #92400e;
+    }
+
+    /* Callout */
+    .callout {
+      display: flex;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      margin: 1rem 0;
+      font-size: 0.88rem;
+    }
+    .callout.info { background: #eff6ff; border-left: 4px solid var(--primary); color: #1e40af; }
+    .callout.warn { background: #fffbeb; border-left: 4px solid var(--accent); color: #92400e; }
+    .callout.success { background: #f0fdf4; border-left: 4px solid var(--green); color: #15803d; }
+    .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem; }
+
+    /* Roles table */
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    .role-card {
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 2px solid transparent;
+    }
+    .role-card.admin { background: #fef3c7; border-color: #fde68a; }
+    .role-card.teacher { background: #dbeafe; border-color: #bfdbfe; }
+    .role-card.student { background: #d1fae5; border-color: #a7f3d0; }
+    .role-card.exec { background: #ede9fe; border-color: #ddd6fe; }
+    .role-card-head {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-weight: 700; font-size: 1rem; margin-bottom: 0.75rem;
+    }
+    .role-card ul { padding-left: 1.2rem; }
+    .role-card li { font-size: 0.85rem; margin-bottom: 0.3rem; }
+
+    /* Feature table */
+    .feat-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .feat-table th {
+      background: var(--gray-50);
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 700;
+      color: var(--gray-700);
+      border-bottom: 2px solid var(--gray-200);
+    }
+    .feat-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--gray-100);
+      vertical-align: top;
+    }
+    .feat-table tr:hover td { background: var(--gray-50); }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 100px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .badge-green { background: #d1fae5; color: #065f46; }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+    .check { color: var(--green); font-size: 1rem; }
+    .cross { color: var(--red); opacity: 0.4; font-size: 1rem; }
+
+    /* FAQ */
+    .faq-item {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+    }
+    .faq-q {
+      padding: 1rem 1.5rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .faq-q::before {
+      content: '❓';
+      font-size: 1rem;
+    }
+    .faq-a {
+      padding: 0 1.5rem 1rem;
+      font-size: 0.875rem;
+      color: var(--gray-600);
+      border-top: 1px solid var(--gray-100);
+      padding-top: 0.75rem;
+    }
+
+    /* Page mockups (mini) */
+    .mini-screens {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .mini-screen {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--gray-200);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    .mini-screen-bar {
+      background: var(--primary);
+      padding: 0.5rem 0.75rem;
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .mini-screen-body {
+      background: var(--gray-50);
+      padding: 0.75rem;
+      min-height: 120px;
+    }
+    .mini-item {
+      background: white;
+      border-radius: 6px;
+      padding: 0.4rem 0.6rem;
+      margin-bottom: 0.4rem;
+      font-size: 0.7rem;
+      border: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .mini-btn {
+      background: var(--primary);
+      color: white;
+      border-radius: 6px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: inline-block;
+      margin-top: 0.4rem;
+    }
+    .mini-btn.green { background: var(--green); }
+    .mini-btn.amber { background: var(--accent); color: white; }
+
+    /* Footer */
+    .footer {
+      background: var(--primary-dark);
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.85rem;
+      margin-top: 4rem;
+    }
+    .footer strong { color: white; }
+
+    /* Print */
+    @media print {
+      .toc-nav { display: none; }
+      .section { page-break-inside: avoid; }
+    }
+
+    @media (max-width: 640px) {
+      .cover h1 { font-size: 1.8rem; }
+      .roles-grid { grid-template-columns: 1fr; }
+      .mini-screens { grid-template-columns: 1fr; }
+      .mock-stats { grid-template-columns: repeat(2, 1fr); }
+      .mock-quick-links { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== COVER ===== -->
+<div class="cover">
+  <div class="cover-logo">🎓</div>
+  <div class="cover-badge">📖 คู่มือการใช้งานอย่างง่าย</div>
+  <h1>ระบบงานแนะแนว</h1>
+  <h2>โรงเรียนยางวิทยาคาร อำเภอศรีขรภูมิ จังหวัดสุรินทร์</h2>
+  <div class="cover-meta">
+    <span>🌐 yangwittaya.github.io/guidance</span>
+    <span>📅 ปีการศึกษา 2568</span>
+    <span>👥 สำหรับ นักเรียน ครู และผู้บริหาร</span>
+  </div>
+</div>
+
+<!-- ===== NAV ===== -->
+<div class="toc-nav">
+  <div class="toc-inner">
+    <a href="#overview">📌 ภาพรวม</a>
+    <a href="#roles">👥 ประเภทผู้ใช้</a>
+    <a href="#login">🔐 เข้าสู่ระบบ</a>
+    <a href="#dashboard">🏠 หน้าหลัก</a>
+    <a href="#scholarships">🏆 ทุนการศึกษา</a>
+    <a href="#students">📋 ทะเบียนนักเรียน</a>
+    <a href="#portfolio">📁 Portfolio</a>
+    <a href="#tracking">📊 ติดตามสมัคร</a>
+    <a href="#admin">⚙️ ผู้ดูแล</a>
+    <a href="#faq">❓ ปัญหาที่พบบ่อย</a>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- ===== 0. OVERVIEW ===== -->
+  <div class="section" id="overview">
+    <div class="section-header">
+      <div class="section-num">📌</div>
+      <div>
+        <div class="section-title">ภาพรวมระบบงานแนะแนว</div>
+        <div class="section-sub">ระบบออนไลน์สำหรับบริหารจัดการงานแนะแนวครบวงจร</div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-icon">ℹ️</div>
+      <div>ระบบงานแนะแนวใช้งานผ่าน <strong>เว็บเบราว์เซอร์</strong> ไม่ต้องติดตั้งโปรแกรมใดๆ รองรับทั้งคอมพิวเตอร์และมือถือ</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">🎯 ระบบนี้ช่วยอะไรได้บ้าง?</div>
+      <div class="card-body">
+        <div class="mini-screens">
+          <div class="mini-screen">
+            <div class="mini-screen-bar">🏆 ทุนการศึกษา</div>
+            <div class="mini-screen-body">
+              <div class="mini-item">🏆 ทุนเสมอภาค กสศ.</div>
+              <div class="mini-item">🎓 ทุน กยศ. เงินกู้ยืม</div>
+              <div class="mini-item">⭐ ทุนอุปการะนักเรียน</div>
+              <span class="mini-btn">สมัครทุน</span>
+            </div>
+          </div>
+          <div class="mini-screen">
+            <div class="mini-screen-bar">📁 Portfolio</div>
+            <div class="mini-screen-body">
+              <div class="mini-item">📄 อัพโหลดเอกสาร</div>
+              <div class="mini-item">🖼️ ผลงาน/กิจกรรม</div>
+              <div class="mini-item">✅ ตรวจสอบสถานะ</div>
+              <span class="mini-btn green">อัพโหลด</span>
+            </div>
+          </div>
+          <div class="mini-screen">
+            <div class="mini-screen-bar">📊 ติดตามการสมัคร</div>
+            <div class="mini-screen-body">
+              <div class="mini-item">📝 TCAS68 รอบ 1</div>
+              <div class="mini-item">🎯 มหาวิทยาลัย X</div>
+              <div class="mini-item">✅ ผ่านการคัดเลือก</div>
+              <span class="mini-btn amber">ดูสถานะ</span>
+            </div>
+          </div>
+        </div>
+
+        <table class="feat-table">
+          <tr>
+            <th>ฟีเจอร์</th>
+            <th>รายละเอียด</th>
+          </tr>
+          <tr>
+            <td>🏆 ทุนการศึกษา</td>
+            <td>ดูประกาศทุน ช่องทางสมัคร และเงื่อนไขทุนต่างๆ</td>
+          </tr>
+          <tr>
+            <td>📋 ทะเบียนนักเรียน</td>
+            <td>บันทึก/ค้นหาข้อมูลนักเรียน ประวัติส่วนตัว และผลการเรียน</td>
+          </tr>
+          <tr>
+            <td>📁 Portfolio</td>
+            <td>อัพโหลดแฟ้มสะสมผลงาน เอกสารประกอบการสมัครเรียนต่อ</td>
+          </tr>
+          <tr>
+            <td>📊 ติดตามการสมัคร</td>
+            <td>บันทึกและติดตามสถานะการสมัครเรียนต่อ TCAS และมหาวิทยาลัยต่างๆ</td>
+          </tr>
+          <tr>
+            <td>📈 รายงานสรุป</td>
+            <td>สรุปสถิติ ข้อมูลนักเรียน (สำหรับครูและผู้บริหาร)</td>
+          </tr>
+          <tr>
+            <td>⚙️ จัดการผู้ใช้</td>
+            <td>อนุมัติบัญชี กำหนดสิทธิ์ (สำหรับ Admin เท่านั้น)</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 1. ROLES ===== -->
+  <div class="section" id="roles">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <div class="section-title">ประเภทผู้ใช้งาน</div>
+        <div class="section-sub">ระบบมีผู้ใช้ 4 ประเภท แต่ละประเภทมีสิทธิ์การใช้งานต่างกัน</div>
+      </div>
+    </div>
+
+    <div class="roles-grid">
+      <div class="role-card admin">
+        <div class="role-card-head">👑 Admin (ผู้ดูแลระบบ)</div>
+        <ul>
+          <li>อนุมัติบัญชีผู้ใช้ใหม่</li>
+          <li>กำหนด/เปลี่ยนสิทธิ์ผู้ใช้</li>
+          <li>ระงับหรือลบบัญชี</li>
+          <li>เข้าถึงข้อมูลทั้งหมดในระบบ</li>
+          <li>ดูรายงานสรุปทุกประเภท</li>
+        </ul>
+      </div>
+      <div class="role-card teacher">
+        <div class="role-card-head">👨‍🏫 ครูแนะแนว</div>
+        <ul>
+          <li>จัดการทะเบียนนักเรียน</li>
+          <li>เพิ่ม/แก้ไขข้อมูลทุนการศึกษา</li>
+          <li>ดูและอนุมัติ Portfolio นักเรียน</li>
+          <li>ติดตามสถานะการสมัครนักเรียน</li>
+          <li>ดูรายงานสรุปประจำห้อง/ชั้น</li>
+        </ul>
+      </div>
+      <div class="role-card student">
+        <div class="role-card-head">👨‍🎓 นักเรียน</div>
+        <ul>
+          <li>ดูประกาศทุนการศึกษา</li>
+          <li>อัพโหลด Portfolio ของตนเอง</li>
+          <li>บันทึกการสมัครเรียนต่อ</li>
+          <li>ดูข้อมูลส่วนตัวและผลการเรียน</li>
+        </ul>
+      </div>
+      <div class="role-card exec">
+        <div class="role-card-head">🏫 ผู้บริหาร</div>
+        <ul>
+          <li>ดูรายงานสรุปภาพรวม</li>
+          <li>ดูสถิตินักเรียนทั้งหมด</li>
+          <li>ดูข้อมูลทุนการศึกษา</li>
+          <li>ไม่สามารถแก้ไขข้อมูลได้</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 2. LOGIN ===== -->
+  <div class="section" id="login">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <div class="section-title">การเข้าสู่ระบบ</div>
+        <div class="section-sub">เข้าใช้งานที่ yangwittaya.github.io/guidance/login.html</div>
+      </div>
+    </div>
+
+    <!-- Login mockup -->
+    <div class="mockup-browser">
+      <div class="mockup-bar">
+        <div class="mockup-dots">
+          <span style="background:#ff5f57"></span>
+          <span style="background:#febc2e"></span>
+          <span style="background:#28c840"></span>
+        </div>
+        <div class="mockup-url">yangwittaya.github.io/guidance/login.html</div>
+      </div>
+      <div class="mockup-screen">
+        <div class="mock-logo-area">
+          <div class="mock-logo-icon">🎓</div>
+          <h3>งานแนะแนว</h3>
+          <p>โรงเรียนยางวิทยาคาร อ.ศรีขรภูมิ จ.สุรินทร์</p>
+        </div>
+        <div class="mock-login-box">
+          <div style="font-size:1.1rem;font-weight:700;color:#1f2937;margin-bottom:0.25rem">เข้าสู่ระบบ</div>
+          <div style="font-size:0.8rem;color:#9ca3af;margin-bottom:1.25rem">กรอก Email และรหัสผ่านที่ได้รับจากครูแนะแนว</div>
+          <div class="mock-form-label">📧 อีเมล / เลขประจำตัวนักเรียน</div>
+          <div class="mock-input" style="color:#9ca3af">อีเมล หรือ เลขประจำตัว เช่น 02087</div>
+          <div style="font-size:.7rem;color:#9ca3af;margin-top:-0.5rem;margin-bottom:0.75rem">💡 นักเรียนกรอกเฉพาะ เลขประจำตัว ได้เลย</div>
+          <div class="mock-form-label">🔒 รหัสผ่าน</div>
+          <div class="mock-input" style="color:#9ca3af">••••••••</div>
+          <div style="text-align:right;font-size:0.72rem;color:#1a56a4;margin-top:-0.5rem;margin-bottom:0.75rem">ลืมรหัสผ่าน?</div>
+          <div class="mock-btn">🔐 เข้าสู่ระบบ</div>
+          <div style="text-align:center;font-size:0.75rem;color:#9ca3af;margin:.75rem 0">ยังไม่มีบัญชี?</div>
+          <div class="mock-register-btn">📝 ลงทะเบียนเข้าใช้งาน</div>
+          <div class="mock-manual-link">📖 คู่มือการใช้งาน</div>
+          <div class="mock-roles">
+            <div class="mock-role-badge" style="background:#fef3c7;color:#92400e">👑 Admin</div>
+            <div class="mock-role-badge" style="background:#dbeafe;color:#1e40af">👨‍🏫 ครู</div>
+            <div class="mock-role-badge" style="background:#d1fae5;color:#065f46">👨‍🎓 นักเรียน</div>
+            <div class="mock-role-badge" style="background:#ede9fe;color:#5b21b6">🏫 ผู้บริหาร</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-icon">ℹ️</div>
+      <div><strong>หมายเหตุ:</strong> ในภาพจำลองด้านบน จะมีปุ่ม "📖 คู่มือการใช้งาน" เพิ่มขึ้นมาในหน้าเข้าสู่ระบบ เพื่อให้ผู้ใช้เข้าถึงคู่มือนี้ได้ทันที</div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem">
+      <div class="card-head">👨‍🎓 วิธีเข้าสู่ระบบสำหรับนักเรียน</div>
+      <div class="card-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>เปิดเบราว์เซอร์และไปที่ลิงค์</h4>
+              <p>พิมพ์ <strong>yangwittaya.github.io/guidance</strong> หรือกดลิงค์ที่ครูแนะแนวแจ้งให้</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>กรอกเลขประจำตัวนักเรียน</h4>
+              <p>กรอก <strong>เลขประจำตัวนักเรียน</strong> ในช่อง "อีเมล / เลขประจำตัวนักเรียน" (ไม่ต้องใส่อีเมล)</p>
+              <div class="tip">💡 ตัวอย่าง: กรอก <strong>02087</strong> ระบบจะแปลงเป็น 02087@student.yangwittaya.ac.th อัตโนมัติ</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>กรอกรหัสผ่าน</h4>
+              <p>กรอกรหัสผ่านที่ได้รับจากครูแนะแนว กดไอคอน 👁️ เพื่อแสดง/ซ่อนรหัสผ่าน</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4>กดปุ่ม "เข้าสู่ระบบ"</h4>
+              <p>ถ้าข้อมูลถูกต้อง ระบบจะพาไปหน้าหลักโดยอัตโนมัติ</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">📝 ยังไม่มีบัญชี? วิธีลงทะเบียน</div>
+      <div class="card-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>กดปุ่ม "ลงทะเบียนเข้าใช้งาน"</h4>
+              <p>กดปุ่มสีฟ้าที่หน้า Login</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>กรอกข้อมูลส่วนตัว</h4>
+              <p>ชื่อ-นามสกุล, อีเมล, และรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>รอการอนุมัติจาก Admin</h4>
+              <p>หลังลงทะเบียนต้องรอ Admin อนุมัติบัญชีก่อนจึงจะเข้าสู่ระบบได้</p>
+              <div class="tip">⏳ โดยปกติจะได้รับการอนุมัติภายใน 1-2 วันทำการ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 3. DASHBOARD ===== -->
+  <div class="section" id="dashboard">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <div class="section-title">หน้าหลัก (Dashboard)</div>
+        <div class="section-sub">ภาพรวมข้อมูลและทางลัดไปยังฟีเจอร์ต่างๆ</div>
+      </div>
+    </div>
+
+    <div class="mockup-browser">
+      <div class="mockup-bar">
+        <div class="mockup-dots">
+          <span style="background:#ff5f57"></span>
+          <span style="background:#febc2e"></span>
+          <span style="background:#28c840"></span>
+        </div>
+        <div class="mockup-url">yangwittaya.github.io/guidance/index.html</div>
+      </div>
+      <div class="mockup-screen white" style="padding:0">
+        <div class="mock-navbar">
+          <div class="mock-nav-logo">🎓</div>
+          <div class="mock-nav-title">งานแนะแนว <span style="font-size:0.7rem;font-weight:400;opacity:0.7;display:block">โรงเรียนยางวิทยาคาร</span></div>
+          <div class="mock-nav-links">
+            <div class="mock-nav-link active">🏠 หน้าหลัก</div>
+            <div class="mock-nav-link">🏆 ทุน</div>
+            <div class="mock-nav-link">📋 ทะเบียน</div>
+            <div class="mock-nav-link">📁 Portfolio</div>
+            <div class="mock-nav-link">📊 ติดตาม</div>
+          </div>
+        </div>
+        <div style="padding:1.25rem">
+          <div class="mock-hero">
+            <h3>ระบบงานแนะแนว</h3>
+            <p>ศูนย์กลางข้อมูลทุนการศึกษา การสมัครเรียนต่อ และพัฒนานักเรียน</p>
+          </div>
+          <div class="mock-stats">
+            <div class="mock-stat">
+              <div class="mock-stat-icon" style="background:#fef3c7">🏆</div>
+              <div><div class="mock-stat-num">12</div><div class="mock-stat-lbl">ทุนที่เปิดรับ</div></div>
+            </div>
+            <div class="mock-stat">
+              <div class="mock-stat-icon" style="background:#dbeafe">👨‍🎓</div>
+              <div><div class="mock-stat-num">487</div><div class="mock-stat-lbl">นักเรียนในระบบ</div></div>
+            </div>
+            <div class="mock-stat">
+              <div class="mock-stat-icon" style="background:#d1fae5">📊</div>
+              <div><div class="mock-stat-num">95</div><div class="mock-stat-lbl">กำลังติดตาม</div></div>
+            </div>
+            <div class="mock-stat">
+              <div class="mock-stat-icon" style="background:#ede9fe">📁</div>
+              <div><div class="mock-stat-num">73</div><div class="mock-stat-lbl">Portfolio</div></div>
+            </div>
+          </div>
+          <div class="mock-quick-links">
+            <div class="mock-quick"><div class="mock-quick-icon" style="background:#fef3c7">🏆</div>ทุนการศึกษา</div>
+            <div class="mock-quick"><div class="mock-quick-icon" style="background:#dbeafe">📋</div>ทะเบียนนักเรียน</div>
+            <div class="mock-quick"><div class="mock-quick-icon" style="background:#d1fae5">📁</div>อัพโหลด Portfolio</div>
+            <div class="mock-quick"><div class="mock-quick-icon" style="background:#ede9fe">📊</div>ติดตามการสมัคร</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">📌 องค์ประกอบหน้าหลัก</div>
+      <div class="card-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">①</div>
+            <div class="step-body">
+              <h4>แถบเมนู (Navbar)</h4>
+              <p>อยู่ด้านบนสุด ใช้เดินทางระหว่างหน้าต่างๆ เมนูที่เห็นจะต่างกันตามสิทธิ์ผู้ใช้</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">②</div>
+            <div class="step-body">
+              <h4>กล่องสถิติ (Stats)</h4>
+              <p>แสดงจำนวนทุน นักเรียน การสมัคร และ Portfolio ในระบบ อัพเดทแบบ Real-time</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">③</div>
+            <div class="step-body">
+              <h4>ทางลัดด่วน (Quick Links)</h4>
+              <p>กดการ์ดใดก็ได้เพื่อไปยังฟีเจอร์นั้นๆ ได้เลย</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">④</div>
+            <div class="step-body">
+              <h4>ข่าวสารและกิจกรรม</h4>
+              <p>ประกาศล่าสุดจากครูแนะแนว และปฏิทินกิจกรรมที่กำลังจะมาถึง</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 4. SCHOLARSHIPS ===== -->
+  <div class="section" id="scholarships">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div>
+        <div class="section-title">ทุนการศึกษา</div>
+        <div class="section-sub">ดูประกาศทุน เงื่อนไข และช่องทางสมัคร</div>
+      </div>
+    </div>
+
+    <div class="mockup-browser">
+      <div class="mockup-bar">
+        <div class="mockup-dots">
+          <span style="background:#ff5f57"></span>
+          <span style="background:#febc2e"></span>
+          <span style="background:#28c840"></span>
+        </div>
+        <div class="mockup-url">yangwittaya.github.io/guidance/scholarships.html</div>
+      </div>
+      <div class="mockup-screen white" style="padding:0">
+        <div class="mock-navbar">
+          <div class="mock-nav-logo">🎓</div>
+          <div class="mock-nav-title">งานแนะแนว</div>
+          <div class="mock-nav-links">
+            <div class="mock-nav-link">🏠 หน้าหลัก</div>
+            <div class="mock-nav-link active">🏆 ทุนการศึกษา</div>
+          </div>
+        </div>
+        <div style="padding:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <div style="font-size:1.1rem;font-weight:700">🏆 ทุนการศึกษาทั้งหมด</div>
+            <div style="background:var(--primary);color:white;padding:0.4rem 1rem;border-radius:8px;font-size:0.8rem;font-weight:700">+ เพิ่มทุนใหม่</div>
+          </div>
+          <div style="background:white;border-radius:10px;border:1px solid #e5e7eb;overflow:hidden;margin-bottom:0.75rem">
+            <div style="padding:1rem;border-bottom:1px solid #f3f4f6">
+              <div style="display:flex;align-items:center;gap:0.75rem">
+                <div style="width:44px;height:44px;background:#fef3c7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem">🏆</div>
+                <div style="flex:1">
+                  <div style="font-weight:700;font-size:0.9rem">ทุนเสมอภาค (กสศ.) ปีการศึกษา 2568</div>
+                  <div style="font-size:0.75rem;color:#9ca3af">สมัครได้ถึง 30 มิ.ย. 68 • งบประมาณ 3,000 บาท/ปี</div>
+                </div>
+                <div style="background:#d1fae5;color:#065f46;padding:0.25rem 0.75rem;border-radius:100px;font-size:0.72rem;font-weight:700">เปิดรับ</div>
+              </div>
+            </div>
+            <div style="padding:1rem;border-bottom:1px solid #f3f4f6">
+              <div style="display:flex;align-items:center;gap:0.75rem">
+                <div style="width:44px;height:44px;background:#dbeafe;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem">🎓</div>
+                <div style="flex:1">
+                  <div style="font-weight:700;font-size:0.9rem">ทุนกองทุนเงินให้กู้ยืม (กยศ.)</div>
+                  <div style="font-size:0.75rem;color:#9ca3af">รับสมัครตลอดปี • กู้ได้สูงสุด 25,000 บาท/ปี</div>
+                </div>
+                <div style="background:#d1fae5;color:#065f46;padding:0.25rem 0.75rem;border-radius:100px;font-size:0.72rem;font-weight:700">เปิดรับ</div>
+              </div>
+            </div>
+            <div style="padding:1rem">
+              <div style="display:flex;align-items:center;gap:0.75rem">
+                <div style="width:44px;height:44px;background:#ede9fe;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem">⭐</div>
+                <div style="flex:1">
+                  <div style="font-weight:700;font-size:0.9rem">ทุนอุปการะนักเรียน โรงเรียน</div>
+                  <div style="font-size:0.75rem;color:#9ca3af">ปิดรับสมัครแล้ว • ครั้งต่อไป ต.ค. 68</div>
+                </div>
+                <div style="background:#fee2e2;color:#991b1b;padding:0.25rem 0.75rem;border-radius:100px;font-size:0.72rem;font-weight:700">ปิดรับ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">📖 วิธีใช้งานหน้าทุนการศึกษา</div>
+      <div class="card-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>ดูรายการทุนทั้งหมด</h4>
+              <p>หน้านี้จะแสดงทุนทั้งหมดพร้อมสถานะ (เปิดรับ/ปิดรับ) และวันหมดเขต</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>กดดูรายละเอียดทุน</h4>
+              <p>กดที่การ์ดทุนเพื่อดูเงื่อนไข คุณสมบัติผู้มีสิทธิ์ และช่องทางการสมัคร</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>ครู: เพิ่มทุนใหม่</h4>
+              <p>ครูแนะแนวกดปุ่ม <strong>"+ เพิ่มทุนใหม่"</strong> เพื่อเพิ่มประกาศทุนในระบบ</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 5. STUDENTS ===== -->
+  <div class="section" id="students">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div>
+        <div class="section-title">ทะเบียนนักเรียน</div>
+        <div class="section-sub">บันทึก/ค้นหาข้อมูลนักเรียน (สำหรับครูและ Admin)</div>
+      </div>
+    </div>
+
+    <div class="mockup-browser">
+      <div class="mockup-bar">
+        <div class="mockup-dots">
+          <span style="background:#ff5f57"></span>
+          <span style="background:#febc2e"></span>
+          <span style="background:#28c840"></span>
+        </div>
+        <div class="mockup-url">yangwittaya.github.io/guidance/students.html</div>
+      </div>
+      <div class="mockup-screen white" style="padding:0">
+        <div class="mock-navbar">
+          <div class="mock-nav-logo">🎓</div>
+          <div class="mock-nav-title">งานแนะแนว</div>
+          <div class="mock-nav-links">
+            <div class="mock-nav-link active">📋 ทะเบียนนักเรียน</div>
+          </div>
+        </div>
+        <div style="padding:1.25rem">
+          <div style="display:flex;gap:0.75rem;margin-bottom:1rem;align-items:center">
+            <div style="flex:1;background:white;border:1.5px solid #d1d5db;border-radius:8px;padding:0.5rem 1rem;font-size:0.82rem;color:#9ca3af">🔍 ค้นหานักเรียน...</div>
+            <div style="background:white;border:1.5px solid #d1d5db;border-radius:8px;padding:0.5rem 0.75rem;font-size:0.8rem;color:#374151">ชั้น ▼</div>
+            <div style="background:var(--primary);color:white;border-radius:8px;padding:0.5rem 1rem;font-size:0.8rem;font-weight:700">+ เพิ่มนักเรียน</div>
+          </div>
+          <div style="background:white;border-radius:10px;border:1px solid #e5e7eb;overflow:hidden">
+            <div style="padding:0.6rem 1rem;background:#f9fafb;border-bottom:1px solid #e5e7eb;display:flex;gap:1rem;font-size:0.75rem;font-weight:700;color:#374151">
+              <div style="width:80px">เลขประจำตัว</div>
+              <div style="flex:1">ชื่อ-นามสกุล</div>
+              <div style="width:60px">ชั้น</div>
+              <div style="width:80px">ห้อง</div>
+              <div style="width:70px">จัดการ</div>
+            </div>
+            <div style="padding:0.75rem 1rem;border-bottom:1px solid #f3f4f6;display:flex;gap:1rem;font-size:0.8rem;align-items:center">
+              <div style="width:80px;font-weight:700;color:var(--primary)">02087</div>
+              <div style="flex:1">นายสมชาย ใจดี</div>
+              <div style="width:60px">ม.6</div>
+              <div style="width:80px">1</div>
+              <div style="width:70px;display:flex;gap:0.3rem"><span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:0.2rem 0.4rem;font-size:0.7rem">แก้ไข</span></div>
+            </div>
+            <div style="padding:0.75rem 1rem;border-bottom:1px solid #f3f4f6;display:flex;gap:1rem;font-size:0.8rem;align-items:center">
+              <div style="width:80px;font-weight:700;color:var(--primary)">02088</div>
+              <div style="flex:1">นางสาวมาลี รักเรียน</div>
+              <div style="width:60px">ม.6</div>
+              <div style="width:80px">2</div>
+              <div style="width:70px;display:flex;gap:0.3rem"><span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:0.2rem 0.4rem;font-size:0.7rem">แก้ไข</span></div>
+            </div>
+            <div style="padding:0.75rem 1rem;display:flex;gap:1rem;font-size:0.8rem;align-items:center">
+              <div style="width:80px;font-weight:700;color:var(--primary)">02089</div>
+              <div style="flex:1">นายวิชัย เก่งมาก</div>
+              <div style="width:60px">ม.5</div>
+              <div style="width:80px">3</div>
+              <div style="width:70px;display:flex;gap:0.3rem"><span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:0.2rem 0.4rem;font-size:0.7rem">แก้ไข</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">📖 วิธีใช้งานทะเบียนนักเรียน</div>
+      <div class="card-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>ค้นหานักเรียน</h4>
+              <p>พิมพ์ชื่อ นามสกุล หรือเลขประจำตัวในช่องค้นหา ระบบจะกรองผลทันที</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>กรองตามชั้นเรียน</h4>
+              <p>ใช้ dropdown "ชั้น" เพื่อกรองแสดงเฉพาะนักเรียนชั้นที่ต้องการ</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>เพิ่มนักเรียนใหม่</h4>
+              <p>กดปุ่ม <strong>"+ เพิ่มนักเรียน"</strong> กรอกข้อมูล แล้วกดบันทึก</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <h4>แก้ไขข้อมูลนักเรียน</h4>
+              <p>กดปุ่ม <strong>"แก้ไข"</strong> ในแถวของนักเรียนที่ต้องการ แก้ไขแล้วกดบันทึก</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 6. PORTFOLIO ===== -->
+  <div class="section" id="portfolio">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div>
+        <div class="section-title">อัพโหลด Portfolio</div>
+        <div class="section-sub">แฟ้มสะสมผลงาน เอกสารประกอบการสมัครเรียนต่อ</div>
+      </div>
+    </div>
+
+    <div class="mockup-browser">
+      <div class="mockup-bar">
+        <div class="mockup-dots">
+          <span style="background:#ff5f57"></span>
+          <span style="background:#febc2e"></span>
+          <span style="background:#28c840"></span>
+        </div>
+        <div class="mockup-url">yangwittaya.github.io/guidance/portfolio.html</div>
+      </div>
+      <div class="mockup-screen white" style="padding:0">
+        <div class="mock-navbar">
+          <div class="mock-nav-logo">🎓</div>
+          <div class="mock-nav-title">งานแนะแนว</div>
+          <div class="mock-nav-links">
+            <div class="mock-nav-link active">📁 Portfolio</div>
+          </div>
+        </div>
+        <div style="padding:1.25rem">
+          <div style="background:white;border:2px dashed #bfdbfe;border-radius:12px;padding:2rem;text-align:center;margin-bottom:1rem">
+            <div style="font-size:2rem;margin-bottom:0.5rem">📎</div>
+            <div style="font-weight:700;margin-bottom:0.25rem">ลากไฟล์มาวางที่นี่</div>
+            <div style="font-size:0.8rem;color:#9ca3af;margin-bottom:0.75rem">หรือ</div>
+            <div style="background:var(--primary);color:white;border-radius:8px;padding:0.5rem 1.5rem;display:inline-block;font-size:0.85rem;font-weight:700">เลือกไฟล์</div>
+            <div style="font-size:0.72rem;color:#9ca3af;margin-top:0.75rem">รองรับ PDF, DOCX, JPG, PNG • ขนาดสูงสุด 10 MB</div>
+          </div>
+          <div style="font-weight:700;margin-bottom:0.75rem;font-size:0.9rem">📂 ไฟล์ที่อัพโหลดแล้ว</div>
+          <div style="display:flex;flex-direction:column;gap:0.5rem">
+            <div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem">
+              <div style="font-size:1.2rem">📄</div>
+              <div style="flex:1"><div style="font-size:0.85rem;font-weight:600">Portfolio_สมชาย.pdf</div><div style="font-size:0.72rem;color:#9ca3af">2.3 MB • อัพโหลดเมื่อ 28 พ.ค. 68</div></div>
+              <div style="background:#d1fae5;color:#065f46;padding:0.2rem 0.6rem;border-radius:100px;font-size:0.72rem;font-weight:700">✅ อนุมัติแล้ว</div>
+            </div>
+            <div style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem">
+              <div style="font-size:1.2rem">🖼️</div>
+              <div style="flex:1"><div style="font-size:0.85rem;font-weight:600">เกียรติบัตร_กีฬา.jpg</div><div style="font-size:0.72rem;color:#9ca3af">1.1 MB • อัพโหลดเมื่อ 25 พ.ค. 68</div></div>
+              <div style="background:#fef3c7;color:#92400e;padding:0.2rem 0.6rem;border-radius:100px;font-size:0.72rem;font-weight:700">⏳ รออนุมัติ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">📖 วิธีอัพโหลด Portfolio</div>
+      <div class="card-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>เลือกหรือลากไฟล์</h4>
+              <p>กดปุ่ม <strong>"เลือกไฟล์"</strong> หรือลากไฟล์มาวางในกรอบประหยัดเวลา</p>
+              <div class="tip">📎 รองรับไฟล์ PDF, Word, รูปภาพ JPG/PNG ขนาดไม่เกิน 10 MB</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>กดอัพโหลด</h4>
+              <p>ระบบจะแสดงแถบความคืบหน้า รอจนเสร็จสมบูรณ์</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>รอครูอนุมัติ</h4>
+              <p>หลังอัพโหลด ครูแนะแนวจะตรวจสอบและอนุมัติ สถานะจะเปลี่ยนเป็น ✅ อนุมัติแล้ว</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-icon">⚠️</div>
+      <div>ตรวจสอบชื่อไฟล์ก่อนอัพโหลด ควรตั้งชื่อให้ชัดเจน เช่น <strong>Portfolio_ชื่อ-นามสกุล_ปีการศึกษา.pdf</strong></div>
+    </div>
+  </div>
+
+  <!-- ===== 7. TRACKING ===== -->
+  <div class="section" id="tracking">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <div>
+        <div class="section-title">ติดตามการสมัครเรียนต่อ</div>
+        <div class="section-sub">บันทึกและติดตามสถานะการสมัคร TCAS และสถาบันต่างๆ</div>
+      </div>
+    </div>
+
+    <div class="mockup-browser">
+      <div class="mockup-bar">
+        <div class="mockup-dots">
+          <span style="background:#ff5f57"></span>
+          <span style="background:#febc2e"></span>
+          <span style="background:#28c840"></span>
+        </div>
+        <div class="mockup-url">yangwittaya.github.io/guidance/tracking.html</div>
+      </div>
+      <div class="mockup-screen white" style="padding:0">
+        <div class="mock-navbar">
+          <div class="mock-nav-logo">🎓</div>
+          <div class="mock-nav-title">งานแนะแนว</div>
+          <div class="mock-nav-links">
+            <div class="mock-nav-link active">📊 ติดตามการสมัคร</div>
+          </div>
+        </div>
+        <div style="padding:1.25rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+            <div style="font-size:1rem;font-weight:700">📊 การสมัครของฉัน</div>
+            <div style="background:var(--primary);color:white;padding:0.4rem 0.9rem;border-radius:8px;font-size:0.8rem;font-weight:700">+ บันทึกการสมัคร</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.75rem">
+            <div style="background:white;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
+              <div style="display:flex;align-items:flex-start;gap:0.75rem">
+                <div style="width:42px;height:42px;background:#dbeafe;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem">🎓</div>
+                <div style="flex:1">
+                  <div style="font-weight:700;font-size:0.9rem">มหาวิทยาลัยเทคโนโลยีสุรนารี</div>
+                  <div style="font-size:0.78rem;color:#9ca3af">สาขา: วิศวกรรมคอมพิวเตอร์ • TCAS68 รอบ 1</div>
+                </div>
+                <div style="background:#d1fae5;color:#065f46;padding:0.25rem 0.75rem;border-radius:100px;font-size:0.72rem;font-weight:700">✅ ผ่าน</div>
+              </div>
+            </div>
+            <div style="background:white;border:1px solid #e5e7eb;border-radius:10px;padding:1rem">
+              <div style="display:flex;align-items:flex-start;gap:0.75rem">
+                <div style="width:42px;height:42px;background:#fef3c7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem">🏫</div>
+                <div style="flex:1">
+                  <div style="font-weight:700;font-size:0.9rem">มหาวิทยาลัยขอนแก่น</div>
+                  <div style="font-size:0.78rem;color:#9ca3af">สาขา: แพทยศาสตร์ • TCAS68 รอบ 2</div>
+                </div>
+                <div style="background:#fef3c7;color:#92400e;padding:0.25rem 0.75rem;border-radius:100px;font-size:0.72rem;font-weight:700">⏳ รอผล</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">📖 วิธีบันทึกการสมัครเรียนต่อ</div>
+      <div class="card-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>กดปุ่ม "บันทึกการสมัคร"</h4>
+              <p>กดปุ่มสีน้ำเงินมุมขวาบน</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>กรอกข้อมูลการสมัคร</h4>
+              <p>ชื่อสถาบัน สาขาวิชา รอบที่สมัคร (TCAS รอบ 1-4 หรือสมัครตรง)</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>อัพเดทสถานะ</h4>
+              <p>เมื่อทราบผล กลับมาแก้ไขสถานะเป็น ✅ ผ่าน / ❌ ไม่ผ่าน / ⏳ รอผล</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 8. ADMIN ===== -->
+  <div class="section" id="admin">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <div>
+        <div class="section-title">การจัดการผู้ใช้ (Admin)</div>
+        <div class="section-sub">สำหรับผู้ดูแลระบบเท่านั้น</div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-icon">🔒</div>
+      <div>เมนูนี้มองเห็นและใช้งานได้เฉพาะผู้ใช้ที่มีสิทธิ์ <strong>Admin</strong> เท่านั้น</div>
+    </div>
+
+    <div class="mockup-browser" style="margin-top:1rem">
+      <div class="mockup-bar">
+        <div class="mockup-dots">
+          <span style="background:#ff5f57"></span>
+          <span style="background:#febc2e"></span>
+          <span style="background:#28c840"></span>
+        </div>
+        <div class="mockup-url">yangwittaya.github.io/guidance/admin.html</div>
+      </div>
+      <div class="mockup-screen white" style="padding:0">
+        <div class="mock-navbar">
+          <div class="mock-nav-logo">🎓</div>
+          <div class="mock-nav-title">งานแนะแนว</div>
+          <div class="mock-nav-links">
+            <div class="mock-nav-link active">⚙️ จัดการผู้ใช้</div>
+          </div>
+        </div>
+        <div style="padding:1.25rem">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1rem">
+            <div style="background:white;border-radius:10px;border:1px solid #fde68a;padding:0.75rem;text-align:center">
+              <div style="font-size:1.4rem;font-weight:800;color:#92400e">3</div>
+              <div style="font-size:0.72rem;color:#9ca3af">รอการอนุมัติ</div>
+            </div>
+            <div style="background:white;border-radius:10px;border:1px solid #a7f3d0;padding:0.75rem;text-align:center">
+              <div style="font-size:1.4rem;font-weight:800;color:#065f46">52</div>
+              <div style="font-size:0.72rem;color:#9ca3af">ผู้ใช้ทั้งหมด</div>
+            </div>
+            <div style="background:white;border-radius:10px;border:1px solid #ddd6fe;padding:0.75rem;text-align:center">
+              <div style="font-size:1.4rem;font-weight:800;color:#5b21b6">4</div>
+              <div style="font-size:0.72rem;color:#9ca3af">ประเภทผู้ใช้</div>
+            </div>
+          </div>
+          <div style="background:white;border-radius:10px;border:1px solid #e5e7eb;overflow:hidden">
+            <div style="padding:0.6rem 1rem;background:#fef3c7;border-bottom:1px solid #fde68a;font-size:0.8rem;font-weight:700;color:#92400e">
+              ⏳ รอการอนุมัติ (3 รายการ)
+            </div>
+            <div style="padding:0.75rem 1rem;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:0.75rem">
+              <div style="width:36px;height:36px;background:#dbeafe;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem">👤</div>
+              <div style="flex:1">
+                <div style="font-weight:600;font-size:0.85rem">นายสมศักดิ์ ดีมาก</div>
+                <div style="font-size:0.72rem;color:#9ca3af">somsakD@gmail.com • ลงทะเบียน 11 มิ.ย. 68</div>
+              </div>
+              <div style="display:flex;gap:0.4rem">
+                <span style="background:#d1fae5;color:#065f46;padding:0.3rem 0.6rem;border-radius:6px;font-size:0.72rem;font-weight:700;cursor:pointer">✅ อนุมัติ</span>
+                <span style="background:#fee2e2;color:#991b1b;padding:0.3rem 0.6rem;border-radius:6px;font-size:0.72rem;font-weight:700;cursor:pointer">❌ ปฏิเสธ</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">📖 การอนุมัติผู้ใช้ใหม่</div>
+      <div class="card-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4>เข้าเมนู "จัดการผู้ใช้"</h4>
+              <p>กดเมนู ⚙️ จัดการผู้ใช้ ในแถบเมนู (เห็นได้เฉพาะ Admin)</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4>ดูรายการรออนุมัติ</h4>
+              <p>ส่วนสีเหลืองด้านบนจะแสดงผู้ลงทะเบียนใหม่ที่รอการอนุมัติ</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4>อนุมัติหรือปฏิเสธ</h4>
+              <p>กดปุ่ม <strong>✅ อนุมัติ</strong> เพื่ออนุญาตให้เข้าระบบ หรือ <strong>❌ ปฏิเสธ</strong> เพื่อยกเลิก</p>
+              <div class="tip">💡 หลังอนุมัติ กำหนดสิทธิ์ผู้ใช้ได้เลย (Admin/ครู/นักเรียน/ผู้บริหาร)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 9. FAQ ===== -->
+  <div class="section" id="faq">
+    <div class="section-header">
+      <div class="section-num">9</div>
+      <div>
+        <div class="section-title">ปัญหาที่พบบ่อย</div>
+        <div class="section-sub">คำถามและแนวทางแก้ไขที่พบบ่อย</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">เข้าสู่ระบบไม่ได้ / รหัสผ่านผิด</div>
+      <div class="faq-a">
+        <p>• ตรวจสอบว่ากรอกเลขประจำตัวหรือ Email ถูกต้องหรือไม่</p>
+        <p>• กด <strong>"ลืมรหัสผ่าน?"</strong> เพื่อรีเซ็ตรหัสผ่านทางอีเมล</p>
+        <p>• หากยังไม่ได้ ติดต่อครูแนะแนวหรือ Admin โดยตรง</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">ลงทะเบียนแล้วแต่เข้าระบบไม่ได้</div>
+      <div class="faq-a">
+        <p>หลังลงทะเบียน บัญชีจะอยู่ในสถานะ "รอการอนุมัติ" ต้องรอ Admin อนุมัติก่อน โดยปกติใช้เวลา 1-2 วันทำการ</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">อัพโหลดไฟล์ไม่ได้ / ไฟล์ใหญ่เกินไป</div>
+      <div class="faq-a">
+        <p>• ไฟล์ต้องมีขนาดไม่เกิน 10 MB</p>
+        <p>• รองรับเฉพาะไฟล์: PDF, DOCX, JPG, PNG</p>
+        <p>• ลดขนาดไฟล์ PDF ได้ที่ <strong>ilovepdf.com</strong> หรือ <strong>smallpdf.com</strong></p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">ไม่เห็นเมนูบางอย่าง</div>
+      <div class="faq-a">
+        <p>เมนูจะแตกต่างตามสิทธิ์ผู้ใช้ นักเรียนจะไม่เห็นเมนูรายงานสรุปและจัดการผู้ใช้ หากคิดว่าสิทธิ์ไม่ถูกต้อง ติดต่อ Admin</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">ระบบช้า / หน้าจอค้าง</div>
+      <div class="faq-a">
+        <p>• กด F5 หรือปุ่ม Refresh เพื่อโหลดหน้าใหม่</p>
+        <p>• ลองใช้เบราว์เซอร์ Chrome หรือ Firefox เวอร์ชันล่าสุด</p>
+        <p>• ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">ใช้ระบบบนมือถือได้ไหม?</div>
+      <div class="faq-a">
+        <p>ได้เลย! ระบบรองรับการใช้งานบนมือถือทุกรุ่น เปิดเบราว์เซอร์ Chrome หรือ Safari แล้วไปที่ลิงค์ได้ทันที ไม่ต้องดาวน์โหลดแอพ</p>
+      </div>
+    </div>
+
+    <div class="callout success" style="margin-top:2rem">
+      <div class="callout-icon">📞</div>
+      <div>
+        <strong>ติดต่อสอบถาม:</strong> ครูแนะแนวโรงเรียนยางวิทยาคาร หรือส่งอีเมลมาที่อีเมลโรงเรียน
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== FOOTER ===== -->
+<div class="footer">
+  <p><strong>คู่มือการใช้งานระบบงานแนะแนว</strong></p>
+  <p style="margin-top:0.5rem">โรงเรียนยางวิทยาคาร อำเภอศรีขรภูมิ จังหวัดสุรินทร์ • ปีการศึกษา 2568</p>
+  <p style="margin-top:0.5rem">🌐 yangwittaya.github.io/guidance</p>
+</div>
+
+<script>
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const el = document.querySelector(a.getAttribute('href'));
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // Active nav highlight on scroll
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.toc-inner a');
+  window.addEventListener('scroll', () => {
+    let cur = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 100) cur = s.id;
+    });
+    navLinks.forEach(l => {
+      l.style.color = l.getAttribute('href') === '#' + cur ? 'var(--primary)' : '';
+      l.style.borderBottomColor = l.getAttribute('href') === '#' + cur ? 'var(--primary)' : 'transparent';
+    });
+  });
+</script>
+</body>
+</html>
