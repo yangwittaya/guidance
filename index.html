@@ -225,33 +225,8 @@
         <h2>📢 ข่าวสารและประกาศ</h2>
       </div>
       <div class="card-body" id="newsFeed">
-        <div class="news-item">
-          <div class="news-date"><div>02</div><div>มิ.ย.</div></div>
-          <div>
-            <div class="news-title">เปิดรับสมัครทุนเสมอภาค ปีการศึกษา 2567</div>
-            <div class="news-desc">สำหรับนักเรียนที่ขาดแคลนทุนทรัพย์ สมัครได้ถึง 30 มิ.ย. 67</div>
-          </div>
-        </div>
-        <div class="news-item">
-          <div class="news-date"><div>28</div><div>พ.ค.</div></div>
-          <div>
-            <div class="news-title">ประกาศผลการสมัคร TCAS67 รอบ 2</div>
-            <div class="news-desc">นักเรียนสามารถตรวจสอบผลผ่านระบบ mytcas.com</div>
-          </div>
-        </div>
-        <div class="news-item">
-          <div class="news-date"><div>20</div><div>พ.ค.</div></div>
-          <div>
-            <div class="news-title">กำหนดส่งแฟ้มสะสมผลงาน (Portfolio)</div>
-            <div class="news-desc">นักเรียน ม.6 ที่ต้องการสมัคร TCAS รอบ 1 ส่งภายใน 31 พ.ค.</div>
-          </div>
-        </div>
-        <div class="news-item">
-          <div class="news-date"><div>15</div><div>พ.ค.</div></div>
-          <div>
-            <div class="news-title">ทุนกองทุนเงินให้กู้ยืม (กยศ.) เปิดรับคำขอกู้</div>
-            <div class="news-desc">นักเรียนที่สนใจกู้ยืม กยศ. ติดต่อครูแนะแนวได้เลย</div>
-          </div>
+        <div style="text-align:center;padding:2rem;color:#9ca3af">
+          <div style="font-size:1.5rem;margin-bottom:0.5rem">⏳</div>กำลังโหลด...
         </div>
       </div>
     </div>
@@ -262,35 +237,8 @@
         <h2>📅 กิจกรรมที่กำลังจะมาถึง</h2>
       </div>
       <div id="eventList">
-        <div class="event-item">
-          <div class="event-dot" style="background:#3b82f6"></div>
-          <div class="event-text">TCAS68 รอบ 1 Portfolio เปิดรับสมัคร</div>
-          <div class="event-date">ต.ค. 67</div>
-        </div>
-        <div class="event-item">
-          <div class="event-dot" style="background:#10b981"></div>
-          <div class="event-text">ปิดรับสมัครทุน กสศ. ประจำปี 67</div>
-          <div class="event-date">30 มิ.ย. 67</div>
-        </div>
-        <div class="event-item">
-          <div class="event-dot" style="background:#f59e0b"></div>
-          <div class="event-text">สอบ O-NET ม.6 ปีการศึกษา 2567</div>
-          <div class="event-date">ก.พ. 68</div>
-        </div>
-        <div class="event-item">
-          <div class="event-dot" style="background:#8b5cf6"></div>
-          <div class="event-text">กิจกรรมแนะแนวอาชีพ ม.3 และ ม.6</div>
-          <div class="event-date">ก.ค. 67</div>
-        </div>
-        <div class="event-item">
-          <div class="event-dot" style="background:#ef4444"></div>
-          <div class="event-text">ส่งเอกสารขอกู้ยืม กยศ. รอบสุดท้าย</div>
-          <div class="event-date">31 ก.ค. 67</div>
-        </div>
-        <div class="event-item">
-          <div class="event-dot" style="background:#3b82f6"></div>
-          <div class="event-text">TCAS68 รอบ 2 โควตา เปิดรับสมัคร</div>
-          <div class="event-date">ก.พ. 68</div>
+        <div style="text-align:center;padding:2rem;color:#9ca3af">
+          <div style="font-size:1.5rem;margin-bottom:0.5rem">⏳</div>กำลังโหลด...
         </div>
       </div>
     </div>
@@ -430,6 +378,63 @@
       ['statScholar','statStudents','statTracking','statPortfolio'].forEach(id => document.getElementById(id).textContent = '–');
     }
   }
+
+  // ══════════════════════════════════════════
+  //  โหลดข่าวสารและกิจกรรมจาก Firestore
+  // ══════════════════════════════════════════
+  const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const EVENT_COLORS = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#ec4899'];
+
+  async function loadNewsFeed() {
+    const feed = document.getElementById('newsFeed');
+    try {
+      const snap = await db.collection('news').orderBy('createdAt','desc').limit(10).get();
+      if (snap.empty) {
+        feed.innerHTML = '<div style="text-align:center;padding:2rem;color:#9ca3af">ยังไม่มีข่าวสาร</div>';
+        return;
+      }
+      feed.innerHTML = snap.docs.map(doc => {
+        const n = doc.data();
+        const d = n.createdAt?.toDate ? n.createdAt.toDate() : new Date();
+        return `<div class="news-item">
+          <div class="news-date"><div>${d.getDate()}</div><div>${MONTHS_TH[d.getMonth()]}</div></div>
+          <div>
+            <div class="news-title">${n.title||''}</div>
+            <div class="news-desc">${n.desc||''}</div>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      feed.innerHTML = '<div style="padding:1rem;color:#9ca3af">ไม่สามารถโหลดข่าวสารได้</div>';
+    }
+  }
+
+  async function loadEventList() {
+    const list = document.getElementById('eventList');
+    try {
+      const snap = await db.collection('events').orderBy('order','asc').limit(10).get();
+      if (snap.empty) {
+        list.innerHTML = '<div style="text-align:center;padding:2rem;color:#9ca3af">ยังไม่มีกิจกรรม</div>';
+        return;
+      }
+      list.innerHTML = snap.docs.map((doc, i) => {
+        const ev = doc.data();
+        const color = ev.color || EVENT_COLORS[i % EVENT_COLORS.length];
+        return `<div class="event-item">
+          <div class="event-dot" style="background:${color}"></div>
+          <div class="event-text">${ev.text||''}</div>
+          <div class="event-date">${ev.date||''}</div>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      list.innerHTML = '<div style="padding:1rem;color:#9ca3af">ไม่สามารถโหลดกิจกรรมได้</div>';
+    }
+  }
+
+  // โหลดทันทีหลัง auth พร้อม
+  window.addEventListener('load', () => {
+    setTimeout(() => { loadNewsFeed(); loadEventList(); }, 500);
+  });
 </script>
 </body>
 </html>

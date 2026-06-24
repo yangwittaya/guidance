@@ -406,6 +406,9 @@
     <button class="tab-btn" id="tab-promote" onclick="switchTab('promote')">
       📈 เลื่อนชั้น
     </button>
+    <button class="tab-btn" id="tab-news" onclick="switchTab('news')">
+      📢 ข่าว/กิจกรรม
+    </button>
   </div>
 
   <!-- Search & Filter -->
@@ -592,7 +595,82 @@
       </div>
     </div>
   </div>
+
+  <!-- ══ Tab: ข่าวสาร/กิจกรรม ══ -->
+  <div class="tab-panel" id="panel-news">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+
+      <!-- ── ข่าวสาร ── -->
+      <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+          <h2>📢 ข่าวสารและประกาศ</h2>
+          <button class="btn-sm btn-approve" onclick="openNewsModal()">+ เพิ่มข่าวใหม่</button>
+        </div>
+        <div id="newsAdminList" style="min-height:100px">
+          <div style="text-align:center;padding:2rem;color:#9ca3af">กำลังโหลด...</div>
+        </div>
+      </div>
+
+      <!-- ── กิจกรรม ── -->
+      <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+          <h2>📅 กิจกรรมที่กำลังจะมาถึง</h2>
+          <button class="btn-sm btn-approve" onclick="openEventModal()">+ เพิ่มกิจกรรม</button>
+        </div>
+        <div id="eventAdminList" style="min-height:100px">
+          <div style="text-align:center;padding:2rem;color:#9ca3af">กำลังโหลด...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </main>
+
+<!-- Modal: เพิ่ม/แก้ไขข่าว -->
+<div class="modal-overlay" id="newsModal">
+  <div class="modal" style="max-width:460px">
+    <button class="modal-close" onclick="closeModal('newsModal')">✕</button>
+    <h3 id="newsModalTitle">📢 เพิ่มข่าวสารใหม่</h3>
+    <input type="hidden" id="newsEditId">
+    <div class="form-group">
+      <label class="form-label">หัวข้อข่าว *</label>
+      <input type="text" class="form-control" id="newsTitle" placeholder="เช่น เปิดรับสมัครทุน กสศ. ปีการศึกษา 2568">
+    </div>
+    <div class="form-group">
+      <label class="form-label">รายละเอียด</label>
+      <textarea class="form-control" id="newsDesc" rows="3" placeholder="รายละเอียดเพิ่มเติม..." style="resize:vertical"></textarea>
+    </div>
+    <button class="btn-primary-full" onclick="saveNews()">💾 บันทึก</button>
+  </div>
+</div>
+
+<!-- Modal: เพิ่ม/แก้ไขกิจกรรม -->
+<div class="modal-overlay" id="eventModal">
+  <div class="modal" style="max-width:460px">
+    <button class="modal-close" onclick="closeModal('eventModal')">✕</button>
+    <h3 id="eventModalTitle">📅 เพิ่มกิจกรรมใหม่</h3>
+    <input type="hidden" id="eventEditId">
+    <div class="form-group">
+      <label class="form-label">ชื่อกิจกรรม *</label>
+      <input type="text" class="form-control" id="eventText" placeholder="เช่น TCAS68 รอบ 1 Portfolio เปิดรับสมัคร">
+    </div>
+    <div class="form-group">
+      <label class="form-label">วันที่/ช่วงเวลา</label>
+      <input type="text" class="form-control" id="eventDate" placeholder="เช่น ต.ค. 68 หรือ 30 มิ.ย. 68">
+    </div>
+    <div class="form-group">
+      <label class="form-label">สีจุด</label>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.25rem">
+        <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer"><input type="radio" name="evColor" value="#3b82f6" checked> <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#3b82f6"></span> ฟ้า</label>
+        <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer"><input type="radio" name="evColor" value="#10b981"> <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#10b981"></span> เขียว</label>
+        <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer"><input type="radio" name="evColor" value="#f59e0b"> <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#f59e0b"></span> เหลือง</label>
+        <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer"><input type="radio" name="evColor" value="#8b5cf6"> <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#8b5cf6"></span> ม่วง</label>
+        <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer"><input type="radio" name="evColor" value="#ef4444"> <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#ef4444"></span> แดง</label>
+      </div>
+    </div>
+    <button class="btn-primary-full" onclick="saveEvent()">💾 บันทึก</button>
+  </div>
+</div>
 
 <!-- Modal: ดูข้อมูล -->
 <div class="modal-overlay" id="viewModal">
@@ -1593,6 +1671,171 @@ async function loadStorageStats() {
 window.addEventListener('load', () => {
   setTimeout(loadStorageStats, 2000);
 });
+
+// ══════════════════════════════════════════════
+//  NEWS & EVENTS MANAGEMENT
+// ══════════════════════════════════════════════
+const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+// ── News ──
+async function loadNewsAdmin() {
+  const el = document.getElementById('newsAdminList');
+  if (!el) return;
+  try {
+    const snap = await db.collection('news').orderBy('createdAt','desc').limit(20).get();
+    if (snap.empty) {
+      el.innerHTML = `<div style="text-align:center;padding:2rem;color:#9ca3af">
+        ยังไม่มีข่าวสาร<br><small>กดปุ่ม "+ เพิ่มข่าวใหม่" เพื่อเริ่มต้น</small></div>`;
+      return;
+    }
+    el.innerHTML = snap.docs.map(doc => {
+      const n = doc.data();
+      const d = n.createdAt?.toDate ? n.createdAt.toDate() : new Date();
+      return `<div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.9rem 1.25rem;border-bottom:1px solid #f3f4f6">
+        <div style="background:#dbeafe;color:#1e40af;border-radius:8px;padding:0.4rem 0.6rem;text-align:center;font-size:0.75rem;font-weight:700;min-width:44px;flex-shrink:0">
+          <div>${d.getDate()}</div><div>${MONTHS_TH[d.getMonth()]}</div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.15rem">${n.title||'–'}</div>
+          <div style="font-size:0.8rem;color:#6b7280">${n.desc||''}</div>
+        </div>
+        <div style="display:flex;gap:0.4rem;flex-shrink:0">
+          <button class="btn-sm btn-view" onclick="editNews('${doc.id}','${encodeURIComponent(n.title||'')}','${encodeURIComponent(n.desc||'')}')">✏️</button>
+          <button class="btn-sm btn-delete" onclick="deleteNews('${doc.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="padding:1rem;color:#dc2626">โหลดไม่ได้: ${e.message}</div>`;
+  }
+}
+
+function openNewsModal(id='', title='', desc='') {
+  document.getElementById('newsEditId').value = id;
+  document.getElementById('newsTitle').value   = title;
+  document.getElementById('newsDesc').value    = desc;
+  document.getElementById('newsModalTitle').textContent = id ? '✏️ แก้ไขข่าวสาร' : '📢 เพิ่มข่าวสารใหม่';
+  openModal('newsModal');
+}
+
+function editNews(id, title, desc) {
+  openNewsModal(id, decodeURIComponent(title), decodeURIComponent(desc));
+}
+
+async function saveNews() {
+  const id    = document.getElementById('newsEditId').value;
+  const title = document.getElementById('newsTitle').value.trim();
+  const desc  = document.getElementById('newsDesc').value.trim();
+  if (!title) { showToast('กรุณากรอกหัวข้อข่าว', 'error'); return; }
+  try {
+    if (id) {
+      await db.collection('news').doc(id).update({ title, desc, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      showToast('แก้ไขข่าวสารเรียบร้อยแล้ว ✅');
+    } else {
+      await db.collection('news').add({ title, desc, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      showToast('เพิ่มข่าวสารเรียบร้อยแล้ว ✅');
+    }
+    closeModal('newsModal');
+    loadNewsAdmin();
+  } catch(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); }
+}
+
+async function deleteNews(id) {
+  if (!confirm('ลบข่าวสารนี้?')) return;
+  try {
+    await db.collection('news').doc(id).delete();
+    showToast('ลบข่าวสารเรียบร้อยแล้ว');
+    loadNewsAdmin();
+  } catch(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); }
+}
+
+// ── Events ──
+async function loadEventsAdmin() {
+  const el = document.getElementById('eventAdminList');
+  if (!el) return;
+  try {
+    const snap = await db.collection('events').orderBy('order','asc').limit(20).get();
+    if (snap.empty) {
+      el.innerHTML = `<div style="text-align:center;padding:2rem;color:#9ca3af">
+        ยังไม่มีกิจกรรม<br><small>กดปุ่ม "+ เพิ่มกิจกรรม" เพื่อเริ่มต้น</small></div>`;
+      return;
+    }
+    el.innerHTML = snap.docs.map((doc, i) => {
+      const ev = doc.data();
+      const color = ev.color || '#3b82f6';
+      return `<div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1.25rem;border-bottom:1px solid #f3f4f6">
+        <div style="width:12px;height:12px;border-radius:50%;background:${color};flex-shrink:0"></div>
+        <div style="flex:1;font-size:0.88rem">${ev.text||''}</div>
+        <div style="font-size:0.78rem;color:#9ca3af;white-space:nowrap;margin-right:0.5rem">${ev.date||''}</div>
+        <div style="display:flex;gap:0.4rem;flex-shrink:0">
+          <button class="btn-sm btn-view" onclick="editEvent('${doc.id}','${encodeURIComponent(ev.text||'')}','${encodeURIComponent(ev.date||'')}','${color}')">✏️</button>
+          <button class="btn-sm btn-delete" onclick="deleteEvent('${doc.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="padding:1rem;color:#dc2626">โหลดไม่ได้: ${e.message}</div>`;
+  }
+}
+
+function openEventModal() {
+  document.getElementById('eventEditId').value = '';
+  document.getElementById('eventText').value   = '';
+  document.getElementById('eventDate').value   = '';
+  document.querySelector('input[name="evColor"][value="#3b82f6"]').checked = true;
+  document.getElementById('eventModalTitle').textContent = '📅 เพิ่มกิจกรรมใหม่';
+  openModal('eventModal');
+}
+
+function editEvent(id, text, date, color) {
+  document.getElementById('eventEditId').value = id;
+  document.getElementById('eventText').value   = decodeURIComponent(text);
+  document.getElementById('eventDate').value   = decodeURIComponent(date);
+  document.getElementById('eventModalTitle').textContent = '✏️ แก้ไขกิจกรรม';
+  const radio = document.querySelector(`input[name="evColor"][value="${color}"]`);
+  if (radio) radio.checked = true;
+  else document.querySelector('input[name="evColor"]').checked = true;
+  openModal('eventModal');
+}
+
+async function saveEvent() {
+  const id    = document.getElementById('eventEditId').value;
+  const text  = document.getElementById('eventText').value.trim();
+  const date  = document.getElementById('eventDate').value.trim();
+  const color = document.querySelector('input[name="evColor"]:checked')?.value || '#3b82f6';
+  if (!text) { showToast('กรุณากรอกชื่อกิจกรรม', 'error'); return; }
+  try {
+    // ใช้ timestamp เป็น order
+    const order = id ? undefined : Date.now();
+    if (id) {
+      await db.collection('events').doc(id).update({ text, date, color, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      showToast('แก้ไขกิจกรรมเรียบร้อยแล้ว ✅');
+    } else {
+      await db.collection('events').add({ text, date, color, order, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      showToast('เพิ่มกิจกรรมเรียบร้อยแล้ว ✅');
+    }
+    closeModal('eventModal');
+    loadEventsAdmin();
+  } catch(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); }
+}
+
+async function deleteEvent(id) {
+  if (!confirm('ลบกิจกรรมนี้?')) return;
+  try {
+    await db.collection('events').doc(id).delete();
+    showToast('ลบกิจกรรมเรียบร้อยแล้ว');
+    loadEventsAdmin();
+  } catch(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); }
+}
+
+// โหลด news/events เมื่อเปลี่ยนมาที่แท็บ
+const _origSwitchTab = switchTab;
+// hook switchTab เพื่อโหลดข้อมูลเมื่อเปิดแท็บข่าว
+const switchTabOrig = window.switchTab;
+window.switchTab = function(tab) {
+  switchTabOrig(tab);
+  if (tab === 'news') { loadNewsAdmin(); loadEventsAdmin(); }
+};
 </script>
 </body>
 </html>
