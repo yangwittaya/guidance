@@ -330,6 +330,16 @@
       ศูนย์กลางข้อมูลทุนการศึกษา การสมัครเรียนต่อ และพัฒนานักเรียน</p>
   </div>
 
+  <!-- Banner Slider (featured news) — อยู่ใต้ Hero ทันที -->
+  <div id="bannerSection" style="display:none">
+    <div class="banner-wrap">
+      <div id="bannerSlides" class="banner-slides"></div>
+      <button class="banner-btn prev" onclick="bannerMove(-1)">&#10094;</button>
+      <button class="banner-btn next" onclick="bannerMove(1)">&#10095;</button>
+      <div class="banner-dots" id="bannerDots"></div>
+    </div>
+  </div>
+
   <!-- STATS -->
   <div class="stats-grid" id="statsGrid">
     <div class="stat-card">
@@ -392,16 +402,6 @@
         <p>สถานะการสมัครเรียนต่อ</p>
       </div>
     </a>
-  </div>
-
-  <!-- Banner Slider (featured news) -->
-  <div id="bannerSection" style="display:none">
-    <div class="banner-wrap">
-      <div id="bannerSlides" class="banner-slides"></div>
-      <button class="banner-btn prev" onclick="bannerMove(-1)">&#10094;</button>
-      <button class="banner-btn next" onclick="bannerMove(1)">&#10095;</button>
-      <div class="banner-dots" id="bannerDots"></div>
-    </div>
   </div>
 
   <!-- NEWS + EVENTS -->
