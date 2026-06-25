@@ -29,8 +29,15 @@
       font-size: 6rem;
       opacity: 0.15;
     }
-    .hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; min-height: 2.6rem; }
     .hero p { font-size: 1rem; opacity: 0.9; max-width: 600px; }
+    .hero-cursor {
+      display: inline-block;
+      color: rgba(255,255,255,0.8);
+      font-weight: 300;
+      animation: blink .7s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
     .quick-links {
       display: grid;
@@ -315,7 +322,7 @@
 
   <!-- HERO -->
   <div class="hero">
-    <h1>ระบบงานแนะแนว</h1>
+    <h1 id="heroTitle"><span id="heroTyped"></span><span class="hero-cursor">|</span></h1>
     <p>โรงเรียนยางวิทยาคาร อำเภอศรีขรภูมิ จังหวัดสุรินทร์<br>
       ศูนย์กลางข้อมูลทุนการศึกษา การสมัครเรียนต่อ และพัฒนานักเรียน</p>
   </div>
@@ -721,6 +728,41 @@
   window.addEventListener('load', () => {
     setTimeout(() => { loadNewsFeed(); loadEventList(); }, 500);
   });
+
+  // ── Typewriter Effect ──
+  (function() {
+    const phrases = [
+      'ระบบงานแนะแนว',
+      'ศูนย์ข้อมูลทุนการศึกษา',
+      'สมัครเรียนต่อออนไลน์',
+      'พัฒนานักเรียนยางวิทยาคาร',
+    ];
+    const el      = document.getElementById('heroTyped');
+    let pi = 0, ci = 0, deleting = false;
+
+    function tick() {
+      const phrase = phrases[pi];
+      if (!deleting) {
+        el.textContent = phrase.slice(0, ++ci);
+        if (ci === phrase.length) {
+          deleting = true;
+          setTimeout(tick, 2000); // หยุดแสดงข้อความ 2 วิก่อนลบ
+          return;
+        }
+        setTimeout(tick, 90);
+      } else {
+        el.textContent = phrase.slice(0, --ci);
+        if (ci === 0) {
+          deleting = false;
+          pi = (pi + 1) % phrases.length;
+          setTimeout(tick, 400);
+          return;
+        }
+        setTimeout(tick, 45);
+      }
+    }
+    tick();
+  })();
 </script>
 </body>
 </html>
