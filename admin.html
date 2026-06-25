@@ -320,11 +320,11 @@
     <div class="storage-widget-head" onclick="toggleStorage()" style="cursor:pointer;user-select:none">
       <div class="storage-widget-title">
         📦 สถานะพื้นที่จัดเก็บข้อมูล
-        <span id="storageChevron" style="font-size:0.75rem;color:#9ca3af;margin-left:0.25rem;display:inline-block;transition:transform .25s">▲</span>
+        <span id="storageChevron" style="font-size:0.75rem;color:#9ca3af;margin-left:0.25rem;display:inline-block;transition:transform .25s">▼</span>
       </div>
       <div style="display:flex;align-items:center;gap:0.75rem" onclick="event.stopPropagation()">
         <!-- สรุปย่อ แสดงเมื่อซ่อน -->
-        <div id="storageSummary" style="font-size:0.78rem;color:#6b7280;display:none;gap:0.75rem;align-items:center">
+        <div id="storageSummary" style="font-size:0.78rem;color:#6b7280;display:flex;gap:0.75rem;align-items:center">
           <span>☁️ <strong id="sumCloud">–</strong></span>
           <span style="color:#d1d5db">|</span>
           <span>🗄️ <strong id="sumFs">–</strong> docs</span>
@@ -338,7 +338,7 @@
     </div>
 
     <!-- Body — ซ่อน/แสดงได้ -->
-    <div id="storageBody">
+    <div id="storageBody" style="display:none">
       <div style="height:1rem"></div>
       <div class="storage-rows">
 
@@ -1595,7 +1595,7 @@ function showToast(msg, type='success') {
 // ══════════════════════════════════════════════
 //  STORAGE WIDGET TOGGLE
 // ══════════════════════════════════════════════
-let storageOpen = true;
+let storageOpen = false;
 function toggleStorage() {
   const body     = document.getElementById('storageBody');
   const chevron  = document.getElementById('storageChevron');
