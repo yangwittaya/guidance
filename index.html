@@ -29,15 +29,18 @@
       font-size: 6rem;
       opacity: 0.15;
     }
-    .hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; min-height: 2.6rem; }
+    .hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; overflow: hidden; white-space: nowrap; }
     .hero p { font-size: 1rem; opacity: 0.9; max-width: 600px; }
-    .hero-cursor {
+    .hero-marquee {
       display: inline-block;
-      color: rgba(255,255,255,0.8);
-      font-weight: 300;
-      animation: blink .7s step-end infinite;
+      animation: marquee 18s linear infinite;
+      white-space: nowrap;
+      padding-left: 100%;
     }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes marquee {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
 
     .quick-links {
       display: grid;
@@ -322,7 +325,7 @@
 
   <!-- HERO -->
   <div class="hero">
-    <h1 id="heroTitle"><span id="heroTyped"></span><span class="hero-cursor">|</span></h1>
+    <h1><span class="hero-marquee">ระบบงานแนะแนว &nbsp;✦&nbsp; ศูนย์ข้อมูลทุนการศึกษา &nbsp;✦&nbsp; สมัครเรียนต่อออนไลน์ &nbsp;✦&nbsp; พัฒนานักเรียนยางวิทยาคาร &nbsp;✦&nbsp;</span></h1>
     <p>โรงเรียนยางวิทยาคาร อำเภอศรีขรภูมิ จังหวัดสุรินทร์<br>
       ศูนย์กลางข้อมูลทุนการศึกษา การสมัครเรียนต่อ และพัฒนานักเรียน</p>
   </div>
@@ -729,40 +732,6 @@
     setTimeout(() => { loadNewsFeed(); loadEventList(); }, 500);
   });
 
-  // ── Typewriter Effect ──
-  (function() {
-    const phrases = [
-      'ระบบงานแนะแนว',
-      'ศูนย์ข้อมูลทุนการศึกษา',
-      'สมัครเรียนต่อออนไลน์',
-      'พัฒนานักเรียนยางวิทยาคาร',
-    ];
-    const el      = document.getElementById('heroTyped');
-    let pi = 0, ci = 0, deleting = false;
-
-    function tick() {
-      const phrase = phrases[pi];
-      if (!deleting) {
-        el.textContent = phrase.slice(0, ++ci);
-        if (ci === phrase.length) {
-          deleting = true;
-          setTimeout(tick, 2000); // หยุดแสดงข้อความ 2 วิก่อนลบ
-          return;
-        }
-        setTimeout(tick, 90);
-      } else {
-        el.textContent = phrase.slice(0, --ci);
-        if (ci === 0) {
-          deleting = false;
-          pi = (pi + 1) % phrases.length;
-          setTimeout(tick, 400);
-          return;
-        }
-        setTimeout(tick, 45);
-      }
-    }
-    tick();
-  })();
 </script>
 </body>
 </html>
