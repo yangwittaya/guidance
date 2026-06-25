@@ -628,19 +628,83 @@
 
 <!-- Modal: เพิ่ม/แก้ไขข่าว -->
 <div class="modal-overlay" id="newsModal">
-  <div class="modal" style="max-width:460px">
+  <div class="modal" style="max-width:540px">
     <button class="modal-close" onclick="closeModal('newsModal')">✕</button>
     <h3 id="newsModalTitle">📢 เพิ่มข่าวสารใหม่</h3>
     <input type="hidden" id="newsEditId">
-    <div class="form-group">
-      <label class="form-label">หัวข้อข่าว *</label>
-      <input type="text" class="form-control" id="newsTitle" placeholder="เช่น เปิดรับสมัครทุน กสศ. ปีการศึกษา 2568">
+    <input type="hidden" id="newsImageUrl">
+
+    <!-- หัวข้อ + หมวดหมู่ -->
+    <div style="display:grid;grid-template-columns:1fr auto;gap:0.75rem;margin-bottom:1rem">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">หัวข้อข่าว *</label>
+        <input type="text" class="form-control" id="newsTitle" placeholder="เช่น เปิดรับสมัครทุน กสศ. ปีการศึกษา 2568">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">หมวดหมู่</label>
+        <select class="form-control" id="newsCategory" style="width:130px">
+          <option value="🏆 ทุนการศึกษา">🏆 ทุนการศึกษา</option>
+          <option value="📚 TCAS">📚 TCAS</option>
+          <option value="📅 กิจกรรม">📅 กิจกรรม</option>
+          <option value="📋 ทั่วไป" selected>📋 ทั่วไป</option>
+        </select>
+      </div>
     </div>
+
+    <!-- รายละเอียด -->
     <div class="form-group">
       <label class="form-label">รายละเอียด</label>
-      <textarea class="form-control" id="newsDesc" rows="3" placeholder="รายละเอียดเพิ่มเติม..." style="resize:vertical"></textarea>
+      <textarea class="form-control" id="newsDesc" rows="3" placeholder="รายละเอียดข่าวสาร..." style="resize:vertical"></textarea>
     </div>
-    <button class="btn-primary-full" onclick="saveNews()">💾 บันทึก</button>
+
+    <!-- อัพโหลดรูปภาพ -->
+    <div class="form-group">
+      <label class="form-label">🖼️ รูปภาพประกอบ (ไม่บังคับ)</label>
+      <div id="newsUploadZone" onclick="document.getElementById('newsImageFile').click()" style="border:2px dashed #bfdbfe;border-radius:10px;padding:1rem;text-align:center;background:#f0f9ff;cursor:pointer;transition:all .2s" onmouseover="this.style.background='#e0f2fe'" onmouseout="this.style.background='#f0f9ff'">
+        <div id="newsUploadPrompt">
+          <div style="font-size:1.5rem;margin-bottom:4px">📎</div>
+          <div style="font-size:0.82rem;color:#1e40af;font-weight:600">กดเพื่อเลือกรูปภาพ</div>
+          <div style="font-size:0.72rem;color:#64748b;margin-top:2px">JPG, PNG · สูงสุด 5 MB</div>
+        </div>
+        <div id="newsImagePreview" style="display:none">
+          <img id="newsPreviewImg" style="max-height:100px;border-radius:8px;max-width:100%" alt="preview">
+          <div style="font-size:0.75rem;color:#059669;margin-top:4px">✅ <span id="newsImageName"></span></div>
+          <div style="font-size:0.72rem;color:#94a3b8">(กดเพื่อเปลี่ยนรูป)</div>
+        </div>
+      </div>
+      <input type="file" id="newsImageFile" accept="image/*" style="display:none" onchange="handleNewsImage(this)">
+      <div id="newsUploadProgress" style="display:none;margin-top:0.5rem">
+        <div style="height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden">
+          <div id="newsUploadBar" style="height:100%;background:#1a56a4;border-radius:3px;width:0%;transition:width .3s"></div>
+        </div>
+        <div style="font-size:0.75rem;color:#64748b;margin-top:2px">⏳ กำลังอัพโหลด... <span id="newsUploadPct">0</span>%</div>
+      </div>
+    </div>
+
+    <!-- ลิงค์ภายนอก -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">🔗 ลิงค์ภายนอก (ไม่บังคับ)</label>
+        <input type="url" class="form-control" id="newsLink" placeholder="https://...">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">ข้อความปุ่มลิงค์</label>
+        <input type="text" class="form-control" id="newsLinkText" placeholder="เช่น สมัครที่นี่">
+      </div>
+    </div>
+
+    <!-- Featured toggle -->
+    <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:#fef9c3;border-radius:10px;border:1px solid #fde68a;margin-bottom:1.25rem;cursor:pointer" onclick="toggleNewsFeatured()">
+      <div id="featuredToggle" style="width:36px;height:20px;background:#d1d5db;border-radius:10px;position:relative;flex-shrink:0;transition:background .2s">
+        <div style="position:absolute;width:14px;height:14px;background:white;border-radius:50%;top:3px;left:3px;transition:left .2s" id="featuredKnob"></div>
+      </div>
+      <div>
+        <div style="font-size:0.88rem;font-weight:700;color:#92400e">⭐ แสดงใน Banner หน้าหลัก</div>
+        <div style="font-size:0.75rem;color:#a16207">ข่าวนี้จะปรากฏในสไลด์แบนเนอร์หมุนเวียนด้านบน</div>
+      </div>
+    </div>
+
+    <button class="btn-primary-full" id="newsSaveBtn" onclick="saveNews()">💾 บันทึกข่าวสาร</button>
   </div>
 </div>
 
@@ -1677,12 +1741,14 @@ window.addEventListener('load', () => {
 // ══════════════════════════════════════════════
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
-// ── News ──
+// ── News (Enhanced) ──
+let _newsFeatured = false;
+
 async function loadNewsAdmin() {
   const el = document.getElementById('newsAdminList');
   if (!el) return;
   try {
-    const snap = await db.collection('news').orderBy('createdAt','desc').limit(20).get();
+    const snap = await db.collection('news').orderBy('createdAt','desc').limit(30).get();
     if (snap.empty) {
       el.innerHTML = `<div style="text-align:center;padding:2rem;color:#9ca3af">
         ยังไม่มีข่าวสาร<br><small>กดปุ่ม "+ เพิ่มข่าวใหม่" เพื่อเริ่มต้น</small></div>`;
@@ -1691,16 +1757,22 @@ async function loadNewsAdmin() {
     el.innerHTML = snap.docs.map(doc => {
       const n = doc.data();
       const d = n.createdAt?.toDate ? n.createdAt.toDate() : new Date();
-      return `<div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.9rem 1.25rem;border-bottom:1px solid #f3f4f6">
-        <div style="background:#dbeafe;color:#1e40af;border-radius:8px;padding:0.4rem 0.6rem;text-align:center;font-size:0.75rem;font-weight:700;min-width:44px;flex-shrink:0">
-          <div>${d.getDate()}</div><div>${MONTHS_TH[d.getMonth()]}</div>
-        </div>
+      const thumb = n.imageUrl
+        ? `<img src="${n.imageUrl}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0" alt="">`
+        : `<div style="width:48px;height:48px;border-radius:8px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0">📰</div>`;
+      const badge = n.featured ? `<span style="font-size:0.68rem;background:#fef9c3;color:#92400e;padding:1px 6px;border-radius:999px;margin-left:6px;font-weight:700">⭐ Banner</span>` : '';
+      const catBadge = n.category ? `<span style="font-size:0.68rem;background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:999px;font-weight:600">${n.category}</span>` : '';
+      return `<div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;border-bottom:1px solid #f3f4f6">
+        ${thumb}
         <div style="flex:1;min-width:0">
-          <div style="font-weight:700;font-size:0.88rem;margin-bottom:0.15rem">${n.title||'–'}</div>
-          <div style="font-size:0.8rem;color:#6b7280">${n.desc||''}</div>
+          <div style="font-weight:700;font-size:0.88rem;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${n.title||'–'}${badge}
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;margin-bottom:2px">${catBadge}</div>
+          <div style="font-size:0.75rem;color:#9ca3af">${d.getDate()} ${MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}</div>
         </div>
         <div style="display:flex;gap:0.4rem;flex-shrink:0">
-          <button class="btn-sm btn-view" onclick="editNews('${doc.id}','${encodeURIComponent(n.title||'')}','${encodeURIComponent(n.desc||'')}')">✏️</button>
+          <button class="btn-sm btn-view" onclick="editNewsById('${doc.id}')">✏️</button>
           <button class="btn-sm btn-delete" onclick="deleteNews('${doc.id}')">🗑️</button>
         </div>
       </div>`;
@@ -1710,34 +1782,136 @@ async function loadNewsAdmin() {
   }
 }
 
-function openNewsModal(id='', title='', desc='') {
-  document.getElementById('newsEditId').value = id;
-  document.getElementById('newsTitle').value   = title;
-  document.getElementById('newsDesc').value    = desc;
-  document.getElementById('newsModalTitle').textContent = id ? '✏️ แก้ไขข่าวสาร' : '📢 เพิ่มข่าวสารใหม่';
+function openNewsModal() {
+  // reset form
+  document.getElementById('newsEditId').value   = '';
+  document.getElementById('newsImageUrl').value = '';
+  document.getElementById('newsTitle').value    = '';
+  document.getElementById('newsDesc').value     = '';
+  document.getElementById('newsCategory').value = '📋 ทั่วไป';
+  document.getElementById('newsLink').value     = '';
+  document.getElementById('newsLinkText').value = '';
+  document.getElementById('newsImageFile').value = '';
+  document.getElementById('newsUploadPrompt').style.display = '';
+  document.getElementById('newsImagePreview').style.display = 'none';
+  document.getElementById('newsUploadProgress').style.display = 'none';
+  document.getElementById('newsModalTitle').textContent = '📢 เพิ่มข่าวสารใหม่';
+  _newsFeatured = false;
+  _updateFeaturedUI();
   openModal('newsModal');
 }
 
-function editNews(id, title, desc) {
-  openNewsModal(id, decodeURIComponent(title), decodeURIComponent(desc));
+async function editNewsById(id) {
+  try {
+    const doc = await db.collection('news').doc(id).get();
+    if (!doc.exists) { showToast('ไม่พบข้อมูลข่าวสารนี้', 'error'); return; }
+    const n = doc.data();
+    document.getElementById('newsEditId').value   = id;
+    document.getElementById('newsImageUrl').value = n.imageUrl || '';
+    document.getElementById('newsTitle').value    = n.title || '';
+    document.getElementById('newsDesc').value     = n.desc || '';
+    document.getElementById('newsCategory').value = n.category || '📋 ทั่วไป';
+    document.getElementById('newsLink').value     = n.link || '';
+    document.getElementById('newsLinkText').value = n.linkText || '';
+    // show existing image
+    if (n.imageUrl) {
+      document.getElementById('newsUploadPrompt').style.display = 'none';
+      document.getElementById('newsImagePreview').style.display = '';
+      document.getElementById('newsPreviewImg').src = n.imageUrl;
+      document.getElementById('newsImageName').textContent = 'รูปภาพเดิม';
+    } else {
+      document.getElementById('newsUploadPrompt').style.display = '';
+      document.getElementById('newsImagePreview').style.display = 'none';
+    }
+    document.getElementById('newsUploadProgress').style.display = 'none';
+    document.getElementById('newsModalTitle').textContent = '✏️ แก้ไขข่าวสาร';
+    _newsFeatured = !!n.featured;
+    _updateFeaturedUI();
+    openModal('newsModal');
+  } catch(e) { showToast('โหลดข้อมูลไม่ได้: ' + e.message, 'error'); }
+}
+
+function _updateFeaturedUI() {
+  const toggle = document.getElementById('featuredToggle');
+  const knob   = document.getElementById('featuredKnob');
+  if (_newsFeatured) {
+    toggle.style.background = '#1a56a4';
+    knob.style.left = '19px';
+  } else {
+    toggle.style.background = '#d1d5db';
+    knob.style.left = '3px';
+  }
+}
+
+function toggleNewsFeatured() {
+  _newsFeatured = !_newsFeatured;
+  _updateFeaturedUI();
+}
+
+function handleNewsImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { showToast('ไฟล์ใหญ่เกิน 5 MB', 'error'); return; }
+  // preview
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('newsPreviewImg').src = e.target.result;
+    document.getElementById('newsImageName').textContent = file.name;
+    document.getElementById('newsUploadPrompt').style.display = 'none';
+    document.getElementById('newsImagePreview').style.display = '';
+  };
+  reader.readAsDataURL(file);
 }
 
 async function saveNews() {
-  const id    = document.getElementById('newsEditId').value;
-  const title = document.getElementById('newsTitle').value.trim();
-  const desc  = document.getElementById('newsDesc').value.trim();
+  const id       = document.getElementById('newsEditId').value;
+  const title    = document.getElementById('newsTitle').value.trim();
+  const desc     = document.getElementById('newsDesc').value.trim();
+  const category = document.getElementById('newsCategory').value;
+  const link     = document.getElementById('newsLink').value.trim();
+  const linkText = document.getElementById('newsLinkText').value.trim();
+  const file     = document.getElementById('newsImageFile').files[0];
   if (!title) { showToast('กรุณากรอกหัวข้อข่าว', 'error'); return; }
+
+  const btn = document.getElementById('newsSaveBtn');
+  btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+
   try {
+    let imageUrl = document.getElementById('newsImageUrl').value || '';
+
+    // อัพโหลดรูปถ้ามีไฟล์ใหม่
+    if (file) {
+      document.getElementById('newsUploadProgress').style.display = '';
+      const result = await uploadToCloudinary(file, 'news', pct => {
+        document.getElementById('newsUploadBar').style.width = pct + '%';
+        document.getElementById('newsUploadPct').textContent = pct;
+      });
+      imageUrl = result.url;
+    }
+
+    const data = {
+      title, desc, category,
+      imageUrl,
+      link, linkText,
+      featured: _newsFeatured,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
     if (id) {
-      await db.collection('news').doc(id).update({ title, desc, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      await db.collection('news').doc(id).update(data);
       showToast('แก้ไขข่าวสารเรียบร้อยแล้ว ✅');
     } else {
-      await db.collection('news').add({ title, desc, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('news').add(data);
       showToast('เพิ่มข่าวสารเรียบร้อยแล้ว ✅');
     }
     closeModal('newsModal');
     loadNewsAdmin();
-  } catch(e) { showToast('เกิดข้อผิดพลาด: ' + e.message, 'error'); }
+  } catch(e) {
+    showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 บันทึกข่าวสาร';
+  }
 }
 
 async function deleteNews(id) {
@@ -1829,13 +2003,13 @@ async function deleteEvent(id) {
 }
 
 // โหลด news/events เมื่อเปลี่ยนมาที่แท็บ
-const _origSwitchTab = switchTab;
-// hook switchTab เพื่อโหลดข้อมูลเมื่อเปิดแท็บข่าว
-const switchTabOrig = window.switchTab;
-window.switchTab = function(tab) {
-  switchTabOrig(tab);
-  if (tab === 'news') { loadNewsAdmin(); loadEventsAdmin(); }
-};
+(function() {
+  const _orig = window.switchTab;
+  window.switchTab = function(tab) {
+    _orig(tab);
+    if (tab === 'news') { loadNewsAdmin(); loadEventsAdmin(); }
+  };
+})();
 </script>
 </body>
 </html>

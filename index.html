@@ -70,13 +70,104 @@
     .quick-link-info h3 { font-size: 0.95rem; font-weight: 700; color: var(--gray-800); }
     .quick-link-info p { font-size: 0.8rem; color: var(--gray-600); margin-top: 0.15rem; }
 
+    /* ── Banner Slider ── */
+    .banner-wrap {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      background: #0d3b7a;
+      box-shadow: var(--shadow);
+    }
+    .banner-slides { display: flex; transition: transform .4s ease; }
+    .banner-slide {
+      min-width: 100%;
+      position: relative;
+      cursor: pointer;
+    }
+    .banner-slide img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+    }
+    .banner-slide-no-img {
+      width: 100%;
+      height: 200px;
+      background: linear-gradient(135deg,#1a56a4,#0d3b7a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+    }
+    .banner-caption {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.8) 0%, transparent 100%);
+      color: white;
+      padding: 1.5rem 1.25rem 1rem;
+    }
+    .banner-caption .tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      background: rgba(255,255,255,.25);
+      border-radius: 999px;
+      padding: 2px 10px;
+      margin-bottom: 0.35rem;
+      font-weight: 600;
+    }
+    .banner-caption h3 { font-size: 1rem; font-weight: 700; line-height: 1.3; margin: 0; }
+    .banner-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,.4);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s;
+      z-index: 2;
+    }
+    .banner-btn:hover { background: rgba(0,0,0,.7); }
+    .banner-btn.prev { left: 10px; }
+    .banner-btn.next { right: 10px; }
+    .banner-dots {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      z-index: 2;
+    }
+    .banner-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.5);
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .banner-dot.active { background: white; }
+
+    /* ── News items ── */
     .news-item {
-      padding: 1rem 0;
+      padding: 0.85rem 0;
       border-bottom: 1px solid var(--gray-100);
       display: flex;
-      gap: 1rem;
-      align-items: flex-start;
+      gap: 0.75rem;
+      align-items: center;
+      cursor: pointer;
+      transition: background .15s;
     }
+    .news-item:hover { background: #f8faff; margin: 0 -1.5rem; padding: 0.85rem 1.5rem; }
     .news-item:last-child { border-bottom: none; padding-bottom: 0; }
     .news-date {
       background: var(--primary-light);
@@ -89,8 +180,82 @@
       min-width: 48px;
       flex-shrink: 0;
     }
-    .news-title { font-weight: 600; font-size: 0.9rem; color: var(--gray-800); margin-bottom: 0.2rem; }
-    .news-desc { font-size: 0.82rem; color: var(--gray-600); }
+    .news-thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .news-thumb-placeholder {
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+    .news-title { font-weight: 600; font-size: 0.88rem; color: var(--gray-800); margin-bottom: 0.15rem; }
+    .news-desc { font-size: 0.78rem; color: var(--gray-600); display: -webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .news-cat-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      background: #dbeafe;
+      color: #1e40af;
+      border-radius: 999px;
+      padding: 1px 8px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    /* ── News Detail Modal ── */
+    .news-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      z-index: 9000;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+      overflow-y: auto;
+    }
+    .news-modal-overlay.open { display: flex; }
+    .news-modal-box {
+      background: white;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 560px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+      position: relative;
+    }
+    .news-modal-img {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      display: block;
+    }
+    .news-modal-body { padding: 1.5rem; }
+    .news-modal-close {
+      position: absolute;
+      top: 12px; right: 12px;
+      background: rgba(0,0,0,.5);
+      color: white;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
 
     .calendar-widget {
       background: white;
@@ -217,6 +382,16 @@
     </a>
   </div>
 
+  <!-- Banner Slider (featured news) -->
+  <div id="bannerSection" style="display:none">
+    <div class="banner-wrap">
+      <div id="bannerSlides" class="banner-slides"></div>
+      <button class="banner-btn prev" onclick="bannerMove(-1)">&#10094;</button>
+      <button class="banner-btn next" onclick="bannerMove(1)">&#10095;</button>
+      <div class="banner-dots" id="bannerDots"></div>
+    </div>
+  </div>
+
   <!-- NEWS + EVENTS -->
   <div class="grid-2">
     <!-- News -->
@@ -245,6 +420,26 @@
   </div>
 
 </main>
+
+<!-- News Detail Modal -->
+<div class="news-modal-overlay" id="newsDetailModal" onclick="closeNewsDetail(event)">
+  <div class="news-modal-box">
+    <button class="news-modal-close" onclick="document.getElementById('newsDetailModal').classList.remove('open')">✕</button>
+    <img id="detailImg" class="news-modal-img" alt="" style="display:none">
+    <div class="news-modal-body">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+        <span id="detailCat" class="news-cat-tag"></span>
+        <span id="detailDate" style="font-size:0.78rem;color:#9ca3af"></span>
+      </div>
+      <h2 id="detailTitle" style="font-size:1.05rem;font-weight:700;color:#1f2937;line-height:1.4;margin-bottom:0.75rem"></h2>
+      <p id="detailDesc" style="font-size:0.88rem;color:#4b5563;line-height:1.7;white-space:pre-wrap;margin-bottom:1rem"></p>
+      <a id="detailLink" href="#" target="_blank" rel="noopener"
+        style="display:none;align-items:center;gap:0.5rem;padding:0.65rem 1.25rem;background:#1a56a4;color:white;border-radius:10px;font-weight:700;font-size:0.9rem;text-decoration:none;width:fit-content">
+        🔗 <span id="detailLinkText">อ่านต่อ / สมัคร</span>
+      </a>
+    </div>
+  </div>
+</div>
 
 <footer class="footer">
   <p>งานแนะแนว โรงเรียนยางวิทยาคาร &nbsp;|&nbsp; อ.ศรีขรภูมิ จ.สุรินทร์ &nbsp;|&nbsp; ปีการศึกษา 2567</p>
@@ -380,31 +575,120 @@
   }
 
   // ══════════════════════════════════════════
+  // ══════════════════════════════════════════
   //  โหลดข่าวสารและกิจกรรมจาก Firestore
   // ══════════════════════════════════════════
   const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   const EVENT_COLORS = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#ec4899'];
 
+  // ── Banner Slider ──
+  let _bannerItems = [];
+  let _bannerIdx   = 0;
+  let _bannerTimer = null;
+
+  function bannerGo(idx) {
+    _bannerIdx = (idx + _bannerItems.length) % _bannerItems.length;
+    document.getElementById('bannerSlides').style.transform = `translateX(-${_bannerIdx * 100}%)`;
+    document.querySelectorAll('.banner-dot').forEach((d, i) => d.classList.toggle('active', i === _bannerIdx));
+  }
+
+  function bannerMove(dir) { bannerGo(_bannerIdx + dir); resetBannerTimer(); }
+
+  function resetBannerTimer() {
+    clearInterval(_bannerTimer);
+    _bannerTimer = setInterval(() => bannerGo(_bannerIdx + 1), 5000);
+  }
+
+  function buildBanner(items) {
+    if (!items.length) return;
+    _bannerItems = items;
+    const slidesEl = document.getElementById('bannerSlides');
+    const dotsEl   = document.getElementById('bannerDots');
+    slidesEl.innerHTML = items.map(n => {
+      const imgHtml = n.imageUrl
+        ? `<img src="${n.imageUrl}" alt="${n.title||''}" style="width:100%;height:220px;object-fit:cover;display:block">`
+        : `<div class="banner-slide-no-img">📢</div>`;
+      return `<div class="banner-slide" onclick="openNewsDetail(${JSON.stringify(n).replace(/"/g,'&quot;')})">
+        ${imgHtml}
+        <div class="banner-caption">
+          ${n.category ? `<span class="tag">${n.category}</span><br>` : ''}
+          <h3>${n.title||''}</h3>
+        </div>
+      </div>`;
+    }).join('');
+    dotsEl.innerHTML = items.map((_, i) => `<div class="banner-dot${i===0?' active':''}" onclick="bannerGo(${i});resetBannerTimer()"></div>`).join('');
+    document.getElementById('bannerSection').style.display = '';
+    bannerGo(0);
+    resetBannerTimer();
+  }
+
+  // ── News Detail Modal ──
+  function openNewsDetail(n) {
+    const d = n.createdAt?.toDate ? n.createdAt.toDate() : (n.createdAt?.seconds ? new Date(n.createdAt.seconds*1000) : new Date());
+    const dateStr = `${d.getDate()} ${MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543}`;
+    // image
+    const imgEl = document.getElementById('detailImg');
+    if (n.imageUrl) { imgEl.src = n.imageUrl; imgEl.style.display = ''; }
+    else { imgEl.style.display = 'none'; }
+    // fields
+    document.getElementById('detailCat').textContent  = n.category || '';
+    document.getElementById('detailDate').textContent = dateStr;
+    document.getElementById('detailTitle').textContent = n.title || '';
+    document.getElementById('detailDesc').textContent  = n.desc || '';
+    // link
+    const linkEl = document.getElementById('detailLink');
+    if (n.link) {
+      linkEl.href = n.link;
+      linkEl.style.display = 'flex';
+      document.getElementById('detailLinkText').textContent = n.linkText || 'อ่านต่อ / สมัคร';
+    } else {
+      linkEl.style.display = 'none';
+    }
+    document.getElementById('newsDetailModal').classList.add('open');
+  }
+
+  function closeNewsDetail(e) {
+    if (e.target === document.getElementById('newsDetailModal')) {
+      document.getElementById('newsDetailModal').classList.remove('open');
+    }
+  }
+
+  // ── News Feed ──
   async function loadNewsFeed() {
     const feed = document.getElementById('newsFeed');
     try {
-      const snap = await db.collection('news').orderBy('createdAt','desc').limit(10).get();
+      const snap = await db.collection('news').orderBy('createdAt','desc').limit(20).get();
       if (snap.empty) {
         feed.innerHTML = '<div style="text-align:center;padding:2rem;color:#9ca3af">ยังไม่มีข่าวสาร</div>';
         return;
       }
-      feed.innerHTML = snap.docs.map(doc => {
-        const n = doc.data();
-        const d = n.createdAt?.toDate ? n.createdAt.toDate() : new Date();
-        return `<div class="news-item">
+      const all      = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const featured = all.filter(n => n.featured);
+      const regular  = all.filter(n => !n.featured);
+
+      // สร้าง Banner สำหรับข่าว Featured
+      if (featured.length) buildBanner(featured);
+
+      // แสดงรายการข่าวทั้งหมด
+      const display = [...featured, ...regular].slice(0, 10);
+      feed.innerHTML = display.map(n => {
+        const d = n.createdAt?.toDate ? n.createdAt.toDate() : (n.createdAt?.seconds ? new Date(n.createdAt.seconds*1000) : new Date());
+        const thumb = n.imageUrl
+          ? `<img src="${n.imageUrl}" class="news-thumb" alt="" loading="lazy">`
+          : `<div class="news-thumb-placeholder">📰</div>`;
+        const catBadge = n.category ? `<span class="news-cat-tag">${n.category}</span>` : '';
+        return `<div class="news-item" onclick='openNewsDetail(${JSON.stringify(n)})'>
           <div class="news-date"><div>${d.getDate()}</div><div>${MONTHS_TH[d.getMonth()]}</div></div>
-          <div>
+          ${thumb}
+          <div style="flex:1;min-width:0">
+            ${catBadge}
             <div class="news-title">${n.title||''}</div>
             <div class="news-desc">${n.desc||''}</div>
           </div>
         </div>`;
       }).join('');
     } catch(e) {
+      console.error(e);
       feed.innerHTML = '<div style="padding:1rem;color:#9ca3af">ไม่สามารถโหลดข่าวสารได้</div>';
     }
   }
