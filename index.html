@@ -679,10 +679,10 @@
       const regular  = all.filter(n => !n.featured);
 
       // สร้าง Banner สำหรับข่าว Featured
-      if (featured.length) buildBanner(featured);
+      const BANNER_MAX_AGE_DAYS = 14; const getNewsDate = n => n.createdAt?.toDate ? n.createdAt.toDate() : (n.createdAt?.seconds ? new Date(n.createdAt.seconds*1000) : new Date(0)); const isFreshEnough = n => (Date.now() - getNewsDate(n).getTime()) / 86400000 <= BANNER_MAX_AGE_DAYS; const freshFeatured = featured.filter(isFreshEnough); const bannerItems = (freshFeatured.length ? freshFeatured : all.slice(0, 3)).slice(0, 5); if (bannerItems.length) buildBanner(bannerItems);
 
       // แสดงรายการข่าวทั้งหมด
-      const display = [...featured, ...regular].slice(0, 10);
+      const display = all.slice(0, 10);
       feed.innerHTML = display.map(n => {
         const d = n.createdAt?.toDate ? n.createdAt.toDate() : (n.createdAt?.seconds ? new Date(n.createdAt.seconds*1000) : new Date());
         const thumb = n.imageUrl
